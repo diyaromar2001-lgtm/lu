@@ -749,14 +749,14 @@
     const DAY_NAMES = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 
     // ===== SUPABASE =====
-    let supabase = null;
+    let db = null;
     let bookedSlotsCache = {}; // { 'YYYY-MM-DD': ['09:00', ...] }
     const configReady = typeof SUPABASE_URL !== 'undefined'
         && SUPABASE_URL.includes('supabase.co')
         && !SUPABASE_URL.includes('VOTRE-PROJET');
     if (configReady) {
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (e) {
             console.error('Supabase init error', e);
         }
@@ -767,8 +767,8 @@
     // Récupère les créneaux déjà réservés depuis Supabase
     // via la vue publique (ne contient que date/heure, pas les données clients)
     async function loadBookedSlots() {
-        if (!supabase) return;
-        const { data, error } = await supabase
+        if (!db) return;
+        const { data, error } = await db
             .from('public_slots')
             .select('date, time');
         if (error) { console.error('loadBookedSlots error', error); return; }
@@ -782,8 +782,8 @@
 
     // Insère une nouvelle réservation dans Supabase
     async function saveBooking(booking) {
-        if (!supabase) return { ok: false, error: 'Supabase non configuré' };
-        const { error } = await supabase.from('bookings').insert([{
+        if (!db) return { ok: false, error: 'Supabase non configuré' };
+        const { error } = await db.from('bookings').insert([{
             service_name: booking.service.name,
             service_price: booking.service.price,
             date: formatDateKey(booking.date),
