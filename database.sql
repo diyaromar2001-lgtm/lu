@@ -88,6 +88,9 @@ create or replace view public.public_slots as
 grant select on public.public_slots to anon, authenticated;
 grant select on public.bookings to authenticated;
 
+-- L'admin a besoin de lire la table admins pour vérifier son accès
+grant select on public.admins to authenticated;
+
 -- La table admins n'est pas lisible par le public
 revoke all on public.admins from anon;
 

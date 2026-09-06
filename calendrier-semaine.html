@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendrier — Vue Semaine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --action: #1a73e8;              /* boutons d'action */
+        --royal: #1a73e8;               /* bleu roi des cartes */
+        --navy: #153a63;                /* bleu marine des cartes */
+        --bg: #f5f6f8;
+        --line: #e3e6ea;
+        --text: #202124;
+        --muted: #6b7280;
+        --border-r: 8px;
+        --px-per-hour: 64px;
+        --grid-start: 9;                /* 09:00 */
+        --grid-end: 18;                 /* 18:00 */
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+        font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    /* ================= HEADER ================= */
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 16px;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+    }
+    .topbar-left, .topbar-center, .topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #d6dade;
+        background: #fff;
+        color: #3c4043;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 7px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background .15s, box-shadow .15s;
+        white-space: nowrap;
+    }
+    .btn:hover { background: #f3f5f7; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+    .btn-icon {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        background: transparent;
+        color: #3c4043;
+        border-radius: 50%;
+        cursor: pointer;
+    }
+    .btn-icon:hover { background: #f1f3f4; }
+    .btn-icon svg { width: 18px; height: 18px; }
+    .month-label {
+        font-size: 17px;
+        font-weight: 600;
+        letter-spacing: .2px;
+        min-width: 110px;
+        text-align: center;
+    }
+    .week-caption {
+        font-size: 12px;
+        color: var(--muted);
+        background: #f1f3f4;
+        padding: 6px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+    .btn-primary {
+        background: var(--action);
+        border-color: var(--action);
+        color: #fff;
+        font-weight: 600;
+    }
+    .btn-primary:hover { background: #1765cc; box-shadow: 0 1px 3px rgba(26,115,232,.4); }
+
+    /* Menu déroulant générique */
+    .dropdown { position: relative; }
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 6px);
+        right: 0;
+        min-width: 170px;
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.14);
+        padding: 6px;
+        display: none;
+        z-index: 50;
+    }
+    .dropdown-menu.open { display: block; }
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        padding: 8px 10px;
+        font-size: 13px;
+        color: #3c4043;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        text-align: left;
+        font-family: inherit;
+    }
+    .dropdown-item:hover { background: #f1f3f4; }
+    .dropdown-item.active { color: var(--action); font-weight: 600; }
+
+    /* ================= EN-TÊTES DE COLONNES ================= */
+    .cal-headers {
+        display: flex;
+        background: #fff;
+        border-bottom: 1px solid var(--line);
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+    .h-corner { width: 56px; flex-shrink: 0; }
+    .h-day {
+        flex: 1;
+        text-align: center;
+        padding: 12px 4px 10px;
+        font-size: 12px;
+        color: #5f6368;
+        border-left: 1px solid var(--line);
+    }
+    .h-day .d-day { font-weight: 500; }
+    .h-day .d-date { font-weight: 600; }
+    .h-day.today .d-date { color: var(--action); }
+    .h-day.today .d-date::after {
+        content: '';
+        display: block;
+        width: 6px; height: 6px;
+        background: var(--action);
+        border-radius: 50%;
+        margin: 4px auto 0;
+    }
+
+    /* ================= GRILLE ================= */
+    .cal-wrap { flex: 1; overflow: auto; }
+    .grid {
+        display: flex;
+        min-width: 860px;
+        min-height: calc((var(--grid-end) - var(--grid-start)) * var(--px-per-hour));
+    }
+    .time-axis {
+        width: 56px;
+        flex-shrink: 0;
+        position: relative;
+        background: #fff;
+        background-image: repeating-linear-gradient(
+            to bottom,
+            var(--line) 0,
+            var(--line) 1px,
+            transparent 1px,
+            transparent var(--px-per-hour)
+        );
+    }
+    .time-label {
+        position: absolute;
+        right: 8px;
+        transform: translateY(-50%);
+        font-size: 11px;
+        color: #5f6368;
+        font-weight: 500;
+    }
+    .days {
+        flex: 1;
+        display: flex;
+        border-top: 1px solid var(--line);
+    }
+    .day-col {
+        flex: 1;
+        position: relative;
+        border-left: 1px solid var(--line);
+        background-image: repeating-linear-gradient(
+            to bottom,
+            var(--line) 0,
+            var(--line) 1px,
+            transparent 1px,
+            transparent var(--px-per-hour)
+        );
+    }
+    .day-col.closed { background-color: #fafafb; }
+
+    /* ================= CARTES DE RENDEZ-VOUS ================= */
+    .event {
+        position: absolute;
+        background: var(--royal);
+        color: #fff;
+        font-size: 11px;
+        line-height: 1.3;
+        padding: 3px 5px;
+        border-radius: 2px;
+        border-left: 1px solid rgba(255,255,255,.35);
+        overflow: hidden;
+        text-align: left;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+    .event:hover { filter: brightness(1.1); z-index: 2; }
+    .event .e-service {
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .event .e-client {
+        font-weight: 400;
+        font-size: 10px;
+        opacity: .92;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .event.navy { background: var(--navy); }
+    .event.blocked {
+        background: var(--navy);
+        background-image: repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,.07) 0,
+            rgba(255,255,255,.07) 5px,
+            transparent 5px,
+            transparent 10px
+        );
+    }
+
+    .closed-label {
+        position: absolute;
+        inset: 30px 0 auto 0;
+        text-align: center;
+        font-size: 13px;
+        color: #c1c5c9;
+        font-weight: 600;
+    }
+</style>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header class="topbar">
+        <div class="topbar-left">
+            <button class="btn" id="btnToday">Aujourd'hui</button>
+            <span class="month-label" id="monthLabel">août 2026</span>
+            <button class="btn-icon" id="btnPrev" title="Semaine précédente" aria-label="Précédent">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="btn-icon" id="btnNext" title="Semaine suivante" aria-label="Suivant">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </div>
+
+        <div class="topbar-center">
+            <span class="week-caption" id="weekCaption">Semaine du 24 au 30 août 2026</span>
+        </div>
+
+        <div class="topbar-right">
+            <button class="btn-icon" title="Rechercher" aria-label="Rechercher">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </button>
+
+            <div class="dropdown" id="viewDropdown">
+                <button class="btn" id="btnView">
+                    Semaine
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item" data-view="Jour">Jour</button>
+                    <button class="dropdown-item active" data-view="Semaine">Semaine</button>
+                    <button class="dropdown-item" data-view="Mois">Mois</button>
+                </div>
+            </div>
+
+            <button class="btn-icon" title="Filtres" aria-label="Filtres">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            </button>
+
+            <button class="btn-icon" title="Paramètres" aria-label="Paramètres">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+
+            <div class="dropdown" id="manageDropdown">
+                <button class="btn">
+                    Gérer
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item">Équipe & prestations</button>
+                    <button class="dropdown-item">Horaires d'ouverture</button>
+                    <button class="dropdown-item">Rendez-vous bloqués</button>
+                </div>
+            </div>
+
+            <div class="dropdown" id="addDropdown">
+                <button class="btn btn-primary">
+                    Ajouter
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item">Nouveau rendez-vous</button>
+                    <button class="dropdown-item">Rendez-vous bloqué</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ================= EN-TÊTES JOURS ================= -->
+    <div class="cal-headers" id="calHeaders"></div>
+
+    <!-- ================= GRILLE ================= -->
+    <div class="cal-wrap">
+        <div class="grid">
+            <div class="time-axis" id="timeAxis"></div>
+            <div class="days" id="days"></div>
+        </div>
+    </div>
+
+<script>
+    // ================= CONFIG =================
+    const PX_PER_HOUR = 64;
+    const GRID_START = 9;   // 09:00
+    const GRID_END = 18;    // 18:00
+    const MONDAY_BASE = new Date(2026, 7, 24); // lundi 24 août 2026
+
+    const DAY_LABEL = ['lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
+
+    /* Prestation  duration(min)  client              couleur      special */
+    const WEEK_DATA = {
+        0: [ /* lundi 24 */
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Dave Montanari', color: 'royal'  },
+            { start: '09:00', dur: 30, service: 'Coupe enfants',       client: 'Amran',         color: 'navy'   },
+            { start: '09:30', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Client',        color: 'royal'  },
+            { start: '10:00', dur: 60, service: 'Coupe Adulte',        client: 'Marc',          color: 'royal'  },
+            { start: '10:00', dur: 30, service: 'Coupe enfants',       client: 'Léa',           color: 'navy'   },
+            { start: '10:30', dur: 60, service: 'Balayage',            client: 'Sophie',        color: 'navy'   },
+            { start: '11:00', dur: 30, service: 'Bloqué',              client: '',              color: 'blocked'},
+            { start: '14:00', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Dave Montanari',color: 'royal'  },
+            { start: '14:30', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'navy'   },
+            { start: '15:00', dur: 30, service: 'Coupe enfants',       client: 'Tom',           color: 'royal'  },
+            { start: '15:00', dur: 90, service: 'Balayage',            client: 'Sarah',         color: 'navy'   },
+            { start: '16:30', dur: 30, service: 'Coupe Adulte',        client: 'Amran',         color: 'royal'  },
+        ],
+        1: [ /* mardi 25 */
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'navy'   },
+            { start: '09:30', dur: 30, service: 'Coupe enfants',       client: 'Emma',          color: 'royal'  },
+            { start: '10:00', dur: 45, service: 'Coupe + Barbe Adulte',client: 'Lucas',         color: 'navy'   },
+            { start: '11:00', dur: 60, service: 'Balayage',            client: 'Julie',         color: 'royal'  },
+            { start: '14:00', dur: 30, service: 'Coupe Adulte',        client: 'Dave Montanari',color: 'navy'   },
+            { start: '14:00', dur: 30, service: 'Coupe enfants',       client: 'Amran',         color: 'royal'  },
+            { start: '15:30', dur: 60, service: 'Bloqué',              client: '',              color: 'blocked'},
+            { start: '16:30', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Client',        color: 'royal'  },
+        ],
+        2: [ /* mercredi 26 — très chargé */
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Amran',         color: 'navy'   },
+            { start: '09:00', dur: 30, service: 'Coupe enfants',       client: 'Léa',           color: 'royal'  },
+            { start: '09:30', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Dave Montanari',color: 'navy'   },
+            { start: '10:00', dur: 60, service: 'Coupe Adulte',        client: 'Marc',          color: 'royal'  },
+            { start: '10:00', dur: 60, service: 'Balayage',            client: 'Sophie',        color: 'navy'   },
+            { start: '11:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '11:00', dur: 45, service: 'Brushing',            client: 'Nina',          color: 'navy'   },
+            { start: '13:00', dur: 90, service: 'Balayage',            client: 'Chloé',         color: 'royal'  },
+            { start: '15:00', dur: 30, service: 'Coupe enfants',       client: 'Tom',           color: 'navy'   },
+            { start: '15:00', dur: 30, service: 'Bloqué',              client: '',              color: 'blocked'},
+            { start: '16:00', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Client',        color: 'royal'  },
+        ],
+        3: [ /* jeudi 27 */
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Dave Montanari',color: 'royal'  },
+            { start: '10:00', dur: 30, service: 'Coupe enfants',       client: 'Amran',         color: 'navy'   },
+            { start: '11:00', dur: 90, service: 'Balayage',            client: 'Laura',         color: 'royal'  },
+            { start: '14:00', dur: 30, service: 'Coupe + Barbe Adulte',client: 'Client',        color: 'navy'   },
+            { start: '15:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '16:00', dur: 45, service: 'Brushing',            client: 'Emma',          color: 'navy'   },
+        ],
+        4: [ /* vendredi 28 */
+            { start: '09:00', dur: 30, service: 'Coupe enfants',       client: 'Nathan',        color: 'navy'   },
+            { start: '09:30', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '10:00', dur: 60, service: 'Balayage',            client: 'Sarah',         color: 'royal'  },
+            { start: '10:00', dur: 45, service: 'Coupe + Barbe Adulte',client: 'Dave Montanari',color: 'navy'   },
+            { start: '11:30', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '13:00', dur: 90, service: 'Balayage',            client: 'Julie',         color: 'navy'   },
+            { start: '15:30', dur: 30, service: 'Bloqué',              client: '',              color: 'blocked'},
+        ],
+        5: [ /* samedi 29 */
+            { start: '09:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'navy'   },
+            { start: '09:00', dur: 30, service: 'Coupe enfants',       client: 'Amran',         color: 'royal'  },
+            { start: '10:00', dur: 45, service: 'Coupe + Barbe Adulte',client: 'Dave Montanari',color: 'royal'  },
+            { start: '11:00', dur: 90, service: 'Balayage',            client: 'Nina',          color: 'navy'   },
+            { start: '13:00', dur: 30, service: 'Coupe Adulte',        client: 'Client',        color: 'royal'  },
+            { start: '14:00', dur: 45, service: 'Brushing',            client: 'Léa',           color: 'navy'   },
+        ],
+        6: [] /* dimanche 30 — fermé */
+    };
+
+    // ================= RENDU DE LA SEMAINE =================
+    let myMonday = new Date(MONDAY_BASE);
+
+    const $ = (id) => document.getElementById(id);
+
+    document.addEventListener('DOMContentLoaded', () => {
+        buildTimeAxis();
+        buildHeaders();
+        renderWeek();
+        bindEvents();
+    });
+
+    function toMin(t) {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m;
+    }
+
+    function addDays(d, n) {
+        const x = new Date(d);
+        x.setDate(x.getDate() + n);
+        return x;
+    }
+
+    function fmtDay(d) {
+        const day = ['lun', 'mar', 'mer', 'jeu', 'ven', 'sam', 'dim'][d.getDay() === 0 ? 6 : d.getDay() - 1];
+        return { day, date: d.getDate() };
+    }
+
+    function fmtMonth(d) {
+        return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    }
+
+    function buildTimeAxis() {
+        const axis = $('timeAxis');
+        axis.innerHTML = '';
+        for (let h = GRID_START; h < GRID_END; h++) {
+            const lbl = document.createElement('span');
+            lbl.className = 'time-label';
+            lbl.style.top = ((h - GRID_START) * PX_PER_HOUR) + 'px';
+            lbl.textContent = h;
+            axis.appendChild(lbl);
+        }
+    }
+
+    function buildHeaders() {
+        const wrap = $('calHeaders');
+        wrap.innerHTML = '<div class="h-corner"></div>';
+        for (let i = 0; i < 7; i++) {
+            const d = addDays(myMonday, i);
+            const { day, date } = fmtDay(d);
+            const el = document.createElement('div');
+            el.className = 'h-day';
+            el.innerHTML = `<span class="d-day">${day}.</span> <span class="d-date">${date}</span>`;
+            wrap.appendChild(el);
+        }
+    }
+
+    // Algorithme de placement des événements concurrents :
+    // attribue à chaque rendez-vous une sous-colonne (le plus tôt libre),
+    // puis divise la colonne du jour en largeurs égales.
+    function layoutDay(list) {
+        const sorted = list.slice().sort((a, b) => a.startMin - b.startMin || b.dur - a.dur);
+        const colEnds = [];
+        const placed = [];
+
+        for (const ev of sorted) {
+            let c = colEnds.findIndex(end => end <= ev.startMin);
+            if (c === -1) { c = colEnds.length; colEnds.push(0); }
+            colEnds[c] = ev.startMin + ev.dur;
+            placed.push({ ev, col: c });
+        }
+
+        const n = colEnds.length;
+        return placed.map(({ ev, col }) => ({
+            ...ev,
+            top: (ev.startMin - GRID_START * 60) / 60 * PX_PER_HOUR,
+            height: ev.dur / 60 * PX_PER_HOUR,
+            left: (col * (100 / n)) + '%',
+            width: (100 / n) + '%'
+        }));
+    }
+
+    function renderWeek() {
+        const daysWrap = $('days');
+        daysWrap.innerHTML = '';
+        const totalPx = (GRID_END - GRID_START) * PX_PER_HOUR;
+
+        for (let i = 0; i < 7; i++) {
+            const col = document.createElement('div');
+            col.className = 'day-col' + (i === 6 ? ' closed' : '');
+            col.style.height = totalPx + 'px';
+
+            const raw = WEEK_DATA[i] || [];
+            const events = raw.map(e => ({ ...e, startMin: toMin(e.start) }))
+                .filter(e => e.startMin >= GRID_START * 60);
+
+            const placed = layoutDay(events);
+
+            for (const ev of placed) {
+                const card = document.createElement('div');
+                card.className = 'event ' + (ev.color === 'navy' ? 'navy' : (ev.color === 'blocked' ? 'blocked' : ''));
+                card.style.top = ev.top + 'px';
+                card.style.height = ev.height + 'px';
+                card.style.left = ev.left;
+                card.style.width = ev.width;
+                card.title = `${ev.service}${ev.client ? ' — ' + ev.client : ''} · ${ev.start}`;
+                card.innerHTML = ev.client !== ''
+                    ? `<div class="e-service">${ev.service}</div><div class="e-client">${ev.client}</div>`
+                    : `<div class="e-service">${ev.service}</div>`;
+                col.appendChild(card);
+            }
+
+            if (i === 6) {
+                const closed = document.createElement('div');
+                closed.className = 'closed-label';
+                closed.textContent = 'Fermé';
+                col.appendChild(closed);
+            }
+
+            daysWrap.appendChild(col);
+        }
+    }
+
+    // ================= NAVIGATION =================
+    function updateAll() {
+        $('monthLabel').textContent = fmtMonth(myMonday);
+        $('weekCaption').textContent = `Semaine du ${myMonday.getDate()} au ${addDays(myMonday, 6).getDate()} ${fmtMonth(myMonday)}`;
+        buildHeaders();
+        renderWeek();
+    }
+
+    function bindEvents() {
+        $('btnPrev').addEventListener('click', () => { myMonday = addDays(myMonday, -7); updateAll(); });
+        $('btnNext').addEventListener('click', () => { myMonday = addDays(myMonday, 7); updateAll(); });
+        $('btnToday').addEventListener('click', () => { myMonday = new Date(MONDAY_BASE); updateAll(); });
+
+        // Menus déroulants
+        document.querySelectorAll('.dropdown').forEach(dd => {
+            dd.querySelector('.btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                const others = document.querySelectorAll('.dropdown-menu.open');
+                others.forEach(o => { if (o.parentElement !== dd) o.classList.remove('open'); });
+                dd.querySelector('.dropdown-menu').classList.toggle('open');
+            });
+        });
+        document.querySelectorAll('.dropdown-item[data-view]').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-item[data-view]').forEach(x => x.classList.remove('active'));
+                item.classList.add('active');
+                $('btnView').firstChild.textContent = item.dataset.view + ' ';
+            });
+        });
+        document.addEventListener('click', () => {
+            document.querySelectorAll('.dropdown-menu.open').forEach(o => o.classList.remove('open'));
+        });
+    }
+</script>
+</body>
+</html>
