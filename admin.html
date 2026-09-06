@@ -328,10 +328,66 @@
             color: var(--color-text-light); font-size: 0.76rem; font-style: italic;
         }
 
+        /* ===== Onglets du tableau de bord ===== */
+        .dashboard-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+        .dash-tab {
+            border: 1px solid rgba(0,0,0,0.08); background: var(--color-white);
+            padding: 0.6rem 1.3rem; border-radius: 50px; font-family: var(--font-body);
+            font-size: 0.76rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+            cursor: pointer; color: var(--color-text-light); transition: all 0.2s;
+        }
+        .dash-tab:hover { border-color: var(--color-accent); color: var(--color-accent-dark); }
+        .dash-tab.active { background: var(--color-dark); color: var(--color-white); border-color: var(--color-dark); }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        /* Galerie admin */
+        .gal-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+        .gal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 1rem; }
+        .gal-card { position: relative; border-radius: 14px; overflow: hidden; aspect-ratio: 3/4; background: var(--color-cream); box-shadow: 0 2px 14px rgba(0,0,0,0.06); }
+        .gal-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .gal-card .gal-cap { position: absolute; inset: auto 0 0 0; padding: 0.6rem 0.7rem; font-size: 0.72rem; background: linear-gradient(transparent, rgba(26,21,18,0.78)); color: #fff; }
+        .gal-card .gal-actions { position: absolute; top: 0.4rem; right: 0.4rem; display: flex; gap: 0.3rem; }
+        .gal-btn { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.78rem; background: rgba(255,255,255,0.92); display: flex; align-items: center; justify-content: center; }
+        .gal-btn:hover { background: #fff; }
+        .gal-empty { text-align: center; color: var(--color-text-light); padding: 3rem; }
+        .gal-hint { font-size: 0.78rem; color: var(--color-text-light); }
+
+        /* Formulaires Contenu & Horaires */
+        .cfg-card { background: var(--color-white); border-radius: 16px; box-shadow: 0 2px 20px rgba(0,0,0,0.04); padding: 1.5rem; margin-bottom: 1.25rem; }
+        .cfg-card h3 { font-family: var(--font-heading); font-weight: 400; font-size: 1.05rem; margin-bottom: 1rem; }
+        .cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; }
+        .cfg-field label { display: block; font-size: 0.72rem; color: var(--color-text-light); margin-bottom: 0.3rem; }
+        .cfg-field input[type=color] { width: 100%; height: 42px; border: 2px solid rgba(0,0,0,0.08); border-radius: 10px; padding: 3px; background: var(--color-white); cursor: pointer; }
+        .cfg-field input[type=text], .cfg-field textarea {
+            width: 100%; padding: 0.6rem 0.8rem; border: 2px solid rgba(0,0,0,0.08);
+            border-radius: 10px; font-family: var(--font-body); font-size: 0.85rem;
+            background: var(--color-white); color: var(--color-text); outline: none; box-sizing: border-box;
+        }
+        .cfg-field textarea { resize: vertical; min-height: 76px; }
+        .cfg-field input:focus, .cfg-field textarea:focus { border-color: var(--color-accent); }
+        .cfg-full { grid-column: 1 / -1; }
+        .hero-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
+        .hero-row img { height: 84px; width: 130px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); }
+        .panel-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
+        .panel-actions .hint { font-size: 0.78rem; color: var(--color-text-light); }
+
+        .hours-table { background: var(--color-white); border-radius: 16px; box-shadow: 0 2px 20px rgba(0,0,0,0.04); padding: 1.5rem; }
+        .hours-row { display: flex; align-items: center; gap: 1rem; padding: 0.75rem 0; border-bottom: 1px solid rgba(0,0,0,0.05); flex-wrap: wrap; }
+        .hours-row:last-child { border-bottom: none; }
+        .hours-day { width: 110px; font-weight: 500; }
+        .hours-row input[type=time] { padding: 0.5rem; border: 2px solid rgba(0,0,0,0.08); border-radius: 10px; font-family: var(--font-body); color: var(--color-text); }
+        .hours-switch { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; }
+        .hours-closed { color: var(--color-text-light); font-size: 0.82rem; }
+
+        .modal.modal-sm { max-width: 420px; }
+
         @media (max-width: 768px) {
             .stats { grid-template-columns: repeat(2, 1fr); }
             .modal-grid { grid-template-columns: 1fr; }
             .main { padding: 1rem; }
+            .hours-day { width: 90px; }
         }
     </style>
 </head>
@@ -375,6 +431,15 @@
         </div>
 
         <div class="main">
+            <div class="dashboard-tabs" id="dashboardTabs">
+                <button class="dash-tab active" onclick="showPanel('bookings')">Réservations</button>
+                <button class="dash-tab" onclick="showPanel('gallery')">Galerie</button>
+                <button class="dash-tab" onclick="showPanel('content')">Contenu</button>
+                <button class="dash-tab" onclick="showPanel('hours')">Horaires</button>
+            </div>
+
+            <!-- ===== PANNEAU RÉSERVATIONS ===== -->
+            <div class="panel active" id="panelBookings">
             <div class="view-toggle">
                 <button class="view-btn active" id="viewBtnList" onclick="showView('list')">Tableau</button>
                 <button class="view-btn" id="viewBtnWeek" onclick="showView('week')">Semaine</button>
@@ -438,6 +503,97 @@
                 <div class="week-grid">
                     <div class="time-axis" id="timeAxis"></div>
                     <div id="weekDays" style="display:flex;flex:1;"></div>
+                </div>
+                <div class="gal-hint" style="margin-top:0.75rem;">Astuce : cliquez sur un créneau vide d'une colonne pour le bloquer (masqué aux clients).</div>
+            </div>
+            </div>
+
+            <!-- ===== PANNEAU GALERIE ===== -->
+            <div class="panel" id="panelGallery">
+                <div class="gal-toolbar">
+                    <h3 style="font-family:var(--font-heading);font-weight:400;">Photos de la galerie</h3>
+                    <button class="btn btn-primary" onclick="document.getElementById('photoInput').click()">+ Ajouter des photos</button>
+                    <input type="file" id="photoInput" accept="image/*" multiple style="display:none;">
+                </div>
+                <div class="gal-grid" id="galGrid"><div class="gal-empty">Chargement...</div></div>
+            </div>
+
+            <!-- ===== PANNEAU CONTENU ===== -->
+            <div class="panel" id="panelContent">
+                <div class="cfg-card">
+                    <h3>Image de couverture</h3>
+                    <div class="hero-row">
+                        <img id="heroPreview" alt="Aperçu" src="">
+                        <div>
+                            <button class="btn btn-small btn-dark" onclick="document.getElementById('heroInput').click()">Choisir une image</button>
+                            <span class="gal-hint">Grande photo d'accueil (16:9 conseillé).</span>
+                            <input type="file" id="heroInput" accept="image/*" style="display:none;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Couleurs globales</h3>
+                    <div class="cfg-grid">
+                        <div class="cfg-field"><label>Accentuation</label><input type="color" id="col_accent"></div>
+                        <div class="cfg-field"><label>Accentuation foncée</label><input type="color" id="col_accentDark"></div>
+                        <div class="cfg-field"><label>Fond général</label><input type="color" id="col_bg"></div>
+                        <div class="cfg-field"><label>Fond sombre</label><input type="color" id="col_dark"></div>
+                    </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Couleurs des sections (optionnel)</h3>
+                    <div class="cfg-grid">
+                        <div class="cfg-field"><label>À propos</label><input type="color" id="col_about"></div>
+                        <div class="cfg-field"><label>Prestations</label><input type="color" id="col_services"></div>
+                        <div class="cfg-field"><label>Galerie</label><input type="color" id="col_gallery"></div>
+                        <div class="cfg-field"><label>Réservation</label><input type="color" id="col_booking"></div>
+                        <div class="cfg-field"><label>Avis</label><input type="color" id="col_reviews"></div>
+                        <div class="cfg-field"><label>Contact</label><input type="color" id="col_contact"></div>
+                        <div class="cfg-field"><label>Bandeau final</label><input type="color" id="col_cta"></div>
+                        <div class="cfg-field"><label>Pied de page</label><input type="color" id="col_footer"></div>
+                    </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Textes du site</h3>
+                    <div class="cfg-grid">
+                        <div class="cfg-field"><label>Badge accueil</label><input type="text" id="txt_hero_badge"></div>
+                        <div class="cfg-field"><label>Titre accueil (peut contenir &lt;em&gt;…&lt;/em&gt;)</label><input type="text" id="txt_hero_title"></div>
+                        <div class="cfg-field cfg-full"><label>Sous-titre accueil</label><input type="text" id="txt_hero_subtitle"></div>
+                        <div class="cfg-field"><label>À propos — étiquette</label><input type="text" id="txt_about_label"></div>
+                        <div class="cfg-field cfg-full"><label>À propos — titre</label><input type="text" id="txt_about_title"></div>
+                        <div class="cfg-field cfg-full"><label>À propos — texte (saut de ligne = nouveau paragraphe)</label><textarea id="txt_about_text" rows="5"></textarea></div>
+                        <div class="cfg-field"><label>Prestations — étiquette</label><input type="text" id="txt_services_label"></div>
+                        <div class="cfg-field"><label>Prestations — titre</label><input type="text" id="txt_services_title"></div>
+                        <div class="cfg-field cfg-full"><label>Prestations — sous-titre</label><input type="text" id="txt_services_subtitle"></div>
+                        <div class="cfg-field"><label>Galerie — étiquette</label><input type="text" id="txt_gallery_label"></div>
+                        <div class="cfg-field"><label>Galerie — titre</label><input type="text" id="txt_gallery_title"></div>
+                        <div class="cfg-field"><label>Réservation — étiquette</label><input type="text" id="txt_booking_label"></div>
+                        <div class="cfg-field"><label>Réservation — titre</label><input type="text" id="txt_booking_title"></div>
+                        <div class="cfg-field cfg-full"><label>Réservation — sous-titre</label><input type="text" id="txt_booking_subtitle"></div>
+                        <div class="cfg-field"><label>Avis — étiquette</label><input type="text" id="txt_reviews_label"></div>
+                        <div class="cfg-field"><label>Avis — titre</label><input type="text" id="txt_reviews_title"></div>
+                        <div class="cfg-field"><label>Contact — étiquette</label><input type="text" id="txt_contact_label"></div>
+                        <div class="cfg-field"><label>Contact — titre</label><input type="text" id="txt_contact_title"></div>
+                        <div class="cfg-field cfg-full"><label>Bandeau final — titre</label><input type="text" id="txt_cta_title"></div>
+                        <div class="cfg-field cfg-full"><label>Bandeau final — texte</label><input type="text" id="txt_cta_text"></div>
+                    </div>
+                </div>
+
+                <div class="panel-actions">
+                    <button class="btn btn-primary" onclick="saveContent()">Enregistrer le contenu</button>
+                    <span class="hint">Les champs laissés en l'état (couleur non touchée / texte vide) gardent la valeur actuelle du site.</span>
+                </div>
+            </div>
+
+            <!-- ===== PANNEAU HORAIRES ===== -->
+            <div class="panel" id="panelHours">
+                <div class="hours-table" id="hoursTable"></div>
+                <div class="panel-actions">
+                    <button class="btn btn-primary" onclick="saveHours()">Enregistrer les horaires</button>
+                    <span class="hint">Les jours fermés sont masqués dans le calendrier de réservation des clients.</span>
                 </div>
             </div>
         </div>
@@ -512,6 +668,32 @@
 
     <div class="toast" id="toast"></div>
 
+    <!-- ===== MODAL BLOQUER UN CRÉNEAU ===== -->
+    <div class="modal-overlay" id="blockModal">
+        <div class="modal modal-sm">
+            <h2>Bloquer ce créneau</h2>
+            <div class="modal-grid">
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="text" id="blockDate" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Heure</label>
+                    <input type="text" id="blockTime" readonly>
+                </div>
+                <div class="form-group full">
+                    <label>Motif / note (optionnel)</label>
+                    <input type="text" id="blockNote" maxlength="100">
+                </div>
+            </div>
+            <p class="gal-hint">Ce créneau sera masqué aux clients du site public.</p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal('blockModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmBlock()">Bloquer</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ===== CONFIG =====
         let db = null;
@@ -538,6 +720,8 @@
 
         let allBookings = [];
         let currentRow = null;
+        let blockedSlotsCache = []; // [{date, time, note}]
+        let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '' };
 
         // ===== AUTH =====
         let isSignUpMode = false;
@@ -603,6 +787,8 @@
             document.getElementById('authScreen').style.display = 'none';
             document.getElementById('dashboard').style.display = 'block';
             loadBookings();
+            loadSettingsAdmin();
+            loadGalleryAdmin();
         }
 
         function onLoggedOut() {
@@ -633,6 +819,7 @@
                 return;
             }
             allBookings = data || [];
+            await loadBlockedSlots();
             document.getElementById('loadingMsg').style.display = 'none';
             document.getElementById('statsRow').style.display = 'grid';
             document.getElementById('filtersRow').style.display = 'flex';
@@ -839,6 +1026,13 @@
             return h * 60 + m;
         }
 
+        function calParseHm(v) {
+            if (typeof v === 'number') return v;
+            const [hh, mm] = String(v).split(':').map(Number);
+            if (isNaN(hh)) return 0;
+            return hh * 60 + (isNaN(mm) ? 0 : mm);
+        }
+
         function calDateKey(d) {
             return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         }
@@ -929,8 +1123,16 @@
                 lines.className = 'lines';
                 col.appendChild(lines);
 
-                // Lundi (i=0) et dimanche (i=6) : fermé
-                const closed = (i === 0 || i === 6);
+                // Jour fermé -> heures du réglage (lundi=1 et dimanche=0 fermés par défaut)
+                const rawHours = currentSettings.hours || {};
+                const hasCustomHours = Object.keys(rawHours).length > 0;
+                const dayKey = String(d.getDay());
+                const hoursForDay = hasCustomHours
+                    ? rawHours[dayKey]
+                    : (dayKey === '0' || dayKey === '1' ? null : (dayKey === '6' ? [8, 14] : [9, 19]));
+                const openMin = Array.isArray(hoursForDay) ? calParseHm(hoursForDay[0]) : 0;
+                const closeMin = Array.isArray(hoursForDay) ? calParseHm(hoursForDay[1]) : 0;
+                const closed = !Array.isArray(hoursForDay);
                 if (closed) {
                     col.classList.add('closed');
                     const lbl = document.createElement('div');
@@ -938,6 +1140,18 @@
                     lbl.textContent = 'Fermé';
                     col.appendChild(lbl);
                 } else {
+                    // Clic sur une zone vide : bloquer un créneau
+                    col.onclick = (e) => {
+                        if (e.target !== col && !e.target.classList.contains('lines')) return;
+                        const y = e.offsetY;
+                        const totalMin = Math.round((y / CAL_PX_PER_HOUR) * 60 / 30) * 30;
+                        const startMin = CAL_GRID_START * 60 + totalMin;
+                        if (startMin < openMin || startMin >= closeMin) return;
+                        const hh = Math.floor(startMin / 60);
+                        const mm = startMin % 60;
+                        openBlockModal(key, `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`);
+                    };
+
                     const events = allBookings
                         .filter(b => b.date === key)
                         .map(b => ({
@@ -950,6 +1164,27 @@
                         }))
                         .filter(e => e.startMin >= CAL_GRID_START * 60 && e.startMin < CAL_GRID_END * 60);
 
+                    // Bloqués de la journée
+                    const blocked = blockedSlotsCache.filter(b => b.date === key);
+
+                    for (const ev of blocked) {
+                        const startMin = calToMin(ev.time);
+                        if (startMin < CAL_GRID_START * 60 || startMin >= CAL_GRID_END * 60) continue;
+                        const card = document.createElement('div');
+                        card.className = 'cal-evt blocked';
+                        card.style.top = ((startMin - CAL_GRID_START * 60) / 60 * CAL_PX_PER_HOUR) + 'px';
+                        card.style.height = (0.5 * CAL_PX_PER_HOUR) + 'px';
+                        card.style.left = '0';
+                        card.style.width = '100%';
+                        card.title = `Créneau bloqué${ev.note ? ' — ' + ev.note : ''}. Cliquez pour débloquer.`;
+                        card.onclick = (e) => {
+                            e.stopPropagation();
+                            if (confirm('Débloquer ce créneau ? Il redeviendra visible pour les clients.')) unblockSlot(ev.id);
+                        };
+                        card.innerHTML = `<div class="t">⛔ Bloqué</div><div class="c">${escapeHtml(ev.note || '')}</div>`;
+                        col.appendChild(card);
+                    }
+
                     for (const ev of calLayoutDay(events)) {
                         const card = document.createElement('div');
                         card.className = 'cal-evt ' + (ev.status === 'cancelled' ? 'cancelled' : ev.status);
@@ -958,7 +1193,7 @@
                         card.style.left = ev.left;
                         card.style.width = ev.width;
                         card.title = `${ev.service} — ${ev.client} · ${ev.id}`;
-                        card.onclick = () => onCalEventClick(ev.id);
+                        card.onclick = (e) => { e.stopPropagation(); onCalEventClick(ev.id); };
                         card.innerHTML = `<div class="t">${escapeHtml(ev.service)}</div><div class="c">${escapeHtml(ev.client)}</div>`;
                         col.appendChild(card);
                     }
@@ -985,7 +1220,7 @@
         // ===== MODALS & TOAST =====
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-        ['detailsModal', 'editModal'].forEach(id =>
+        ['detailsModal', 'editModal', 'blockModal'].forEach(id =>
             document.getElementById(id).addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
             })
@@ -998,6 +1233,283 @@
             el.classList.add('show');
             clearTimeout(toastTimer);
             toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
+        // ===== PANNEAUX DU TABLEAU DE BORD =====
+        function showPanel(name) {
+            document.querySelectorAll('#dashboardTabs .dash-tab').forEach(t => {
+                t.classList.toggle('active', t.getAttribute('onclick').indexOf(name) !== -1);
+            });
+            ['bookings', 'gallery', 'content', 'hours'].forEach(p => {
+                document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === name);
+            });
+        }
+
+        // ===== RÉGLAGES (lecture) =====
+        async function loadSettingsAdmin() {
+            const { data, error } = await db
+                .from('settings')
+                .select('value')
+                .eq('key', 'site_content')
+                .maybeSingle();
+            if (error) { console.error('loadSettingsAdmin error', error); return; }
+            if (data && data.value) {
+                currentSettings = data.value;
+                fillContentForm();
+                renderHoursForm();
+            }
+        }
+
+        function fillContentForm() {
+            const c = currentSettings.colors || {};
+            const t = currentSettings.texts || {};
+            const set2 = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+            // Couleurs : si défini on préremplit, sinon on laisse blanc (inchangé)
+            ['accent', 'accentDark', 'bg', 'dark'].forEach(k => {
+                const map = { accent: 'col_accent', accentDark: 'col_accentDark', bg: 'col_bg', dark: 'col_dark' };
+                if (c[k]) set2(map[k], c[k]);
+            });
+            ['about', 'services', 'gallery', 'booking', 'reviews', 'contact', 'cta', 'footer'].forEach(k => {
+                if (c[k]) set2('col_' + k, c[k]);
+            });
+            // Textes (HTML conservé pour titres, texte brut sinon)
+            const tmap = {
+                hero_badge: 'txt_hero_badge', hero_title: 'txt_hero_title', hero_subtitle: 'txt_hero_subtitle',
+                about_label: 'txt_about_label', about_title: 'txt_about_title', about_text: 'txt_about_text',
+                services_label: 'txt_services_label', services_title: 'txt_services_title', services_subtitle: 'txt_services_subtitle',
+                gallery_label: 'txt_gallery_label', gallery_title: 'txt_gallery_title',
+                booking_label: 'txt_booking_label', booking_title: 'txt_booking_title', booking_subtitle: 'txt_booking_subtitle',
+                reviews_label: 'txt_reviews_label', reviews_title: 'txt_reviews_title',
+                contact_label: 'txt_contact_label', contact_title: 'txt_contact_title',
+                cta_title: 'txt_cta_title', cta_text: 'txt_cta_text'
+            };
+            for (const k in tmap) set2(tmap[k], typeof t[k] === 'string' ? t[k] : '');
+            // Aperçu hero
+            if (currentSettings.hero_image) {
+                document.getElementById('heroPreview').src = currentSettings.hero_image;
+            }
+        }
+
+        function renderHoursForm() {
+            const names = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+            const h = currentSettings.hours || { 2: ['09:00', '19:00'], 3: ['09:00', '19:00'], 4: ['09:00', '19:00'], 5: ['09:00', '19:00'], 6: ['08:00', '14:00'] };
+            let html = '<h3 style="font-family:var(--font-heading);font-weight:400;margin-bottom:0.5rem;">Horaires de la semaine</h3>';
+            for (let d = 0; d < 7; d++) {
+                const vals = h[String(d)];
+                const open = Array.isArray(vals) ? vals[0] : '09:00';
+                const close = Array.isArray(vals) ? vals[1] : '19:00';
+                const closed = !Array.isArray(vals);
+                html += `
+                    <div class="hours-row" data-day="${d}">
+                        <span class="hours-day">${names[d]}</span>
+                        <label class="hours-switch"><input type="checkbox" data-closed="${d}" ${closed ? 'checked' : ''}> Fermé</label>
+                        <input type="time" data-open="${d}" value="${open}" ${closed ? 'disabled' : ''}>
+                        <span>—</span>
+                        <input type="time" data-close="${d}" value="${close}" ${closed ? 'disabled' : ''}>
+                    </div>`;
+            }
+            document.getElementById('hoursTable').innerHTML = html;
+            document.querySelectorAll('#hoursTable input[data-closed]').forEach(cb => {
+                cb.addEventListener('change', () => {
+                    const row = (cb.closest('.hours-row')).querySelectorAll('input[type=time]');
+                    row.forEach(i => { i.disabled = cb.checked; });
+                });
+            });
+        }
+
+        // ===== ENREGISTRER CONTENU =====
+        async function saveContent() {
+            const btn = document.querySelector('#panelContent .btn-primary');
+            btn.disabled = true;
+
+            const colors = {};
+            const readColor = (id) => { const el = document.getElementById(id); return el.value ? el.value : null; };
+            const g = readColor('col_accent');
+            if (g) colors.accent = g;
+            const gd = readColor('col_accentDark');
+            if (gd) colors.accent_dark = gd;
+            const gb = readColor('col_bg');
+            if (gb) colors.bg = gb;
+            const dk = readColor('col_dark');
+            if (dk) colors.dark = dk;
+            ['about', 'services', 'gallery', 'booking', 'reviews', 'contact', 'cta', 'footer'].forEach(k => {
+                const v = readColor('col_' + k);
+                if (v) colors[k] = v;
+            });
+
+            const texts = {};
+            const readTxt = (id) => { const el = document.getElementById(id); return el ? el.value.trim() : ''; };
+            const txtMap = {
+                hero_badge: 'txt_hero_badge', hero_title: 'txt_hero_title', hero_subtitle: 'txt_hero_subtitle',
+                about_label: 'txt_about_label', about_title: 'txt_about_title', about_text: 'txt_about_text',
+                services_label: 'txt_services_label', services_title: 'txt_services_title', services_subtitle: 'txt_services_subtitle',
+                gallery_label: 'txt_gallery_label', gallery_title: 'txt_gallery_title',
+                booking_label: 'txt_booking_label', booking_title: 'txt_booking_title', booking_subtitle: 'txt_booking_subtitle',
+                reviews_label: 'txt_reviews_label', reviews_title: 'txt_reviews_title',
+                contact_label: 'txt_contact_label', contact_title: 'txt_contact_title',
+                cta_title: 'txt_cta_title', cta_text: 'txt_cta_text'
+            };
+            for (const k in txtMap) { const v = readTxt(txtMap[k]); if (v) texts[k] = v; }
+
+            const payload = {
+                colors,
+                texts,
+                hours: currentSettings.hours || {},
+                hero_image: pendingHeroUrl || currentSettings.hero_image || ''
+            };
+            await saveSettings(payload, btn, 'Contenu enregistré ✔');
+        }
+
+        let pendingHeroUrl = ''; // image hero sélectionnée mais pas encore enregistrée
+
+        async function saveSettings(payload, btn, msg) {
+            const { error } = await db
+                .from('settings')
+                .upsert({ key: 'site_content', value: payload }, { onConflict: 'key' });
+            btn.disabled = false;
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            currentSettings = payload;
+            pendingHeroUrl = '';
+            showToast(msg);
+        }
+
+        // ===== ENREGISTRER HORAIRES =====
+        async function saveHours() {
+            const btn = document.querySelector('#panelHours .btn-primary');
+            btn.disabled = true;
+            const hours = {};
+            for (let d = 0; d < 7; d++) {
+                const cb = document.querySelector(`#hoursTable input[data-closed="${d}"]`);
+                if (cb && cb.checked) { hours[String(d)] = null; continue; }
+                const openEl = document.querySelector(`#hoursTable input[data-open="${d}"]`);
+                const closeEl = document.querySelector(`#hoursTable input[data-close="${d}"]`);
+                if (openEl && closeEl) hours[String(d)] = [openEl.value || '09:00', closeEl.value || '19:00'];
+            }
+            const payload = { ...currentSettings, hours };
+            await saveSettings(payload, btn, 'Horaires enregistrés ✔');
+        }
+
+        // ===== GALERIE (admin) =====
+        async function loadGalleryAdmin() {
+            const grid = document.getElementById('galGrid');
+            grid.innerHTML = '<div class="gal-empty">Chargement...</div>';
+            const { data, error } = await db
+                .from('gallery')
+                .select('id, url, caption, sort_order')
+                .order('sort_order', { ascending: true });
+            if (error) { grid.innerHTML = '<div class="gal-empty">Erreur : ' + error.message + '</div>'; return; }
+            const photos = data || [];
+            if (photos.length === 0) { grid.innerHTML = '<div class="gal-empty">Aucune photo pour le moment. Ajoutez-en !</div>'; return; }
+            grid.innerHTML = photos.map(p => `
+                <div class="gal-card">
+                    <img src="${p.url}" loading="lazy" alt="">
+                    <div class="gal-cap">${escapeHtml(p.caption || '')}</div>
+                    <div class="gal-actions">
+                        <button class="gal-btn" title="Modifier la légende" onclick="openPhotoCaption('${p.id}')">✏️</button>
+                        <button class="gal-btn" title="Supprimer" onclick="deletePhoto('${p.id}')">🗑</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        async function uploadPhotos(fileList) {
+            const files = Array.from(fileList || []).filter(f => f && f.type && f.type.startsWith('image/'));
+            if (files.length === 0) { showToast('Veuillez choisir des images'); return; }
+            const maxSort = 99; // ordre simple d'ajout à la fin
+            let okCount = 0;
+            for (const file of files) {
+                const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const path = `gallery-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+                const { error: upErr } = await db.storage.from('photos').upload(path, file, { cacheControl: '3600', upsert: true });
+                if (upErr) { showToast('Échec upload : ' + upErr.message); continue; }
+                const { data: pub } = db.storage.from('photos').getPublicUrl(path);
+                const url = pub.publicUrl;
+                const { error: inErr } = await db.from('gallery').insert([{ url, caption: '', sort_order: okCount }]);
+                if (!inErr) okCount++;
+            }
+            showToast(okCount + ' photo(s) ajoutée(s) ✔');
+            loadGalleryAdmin();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('photoInput');
+            if (input) input.addEventListener('change', (e) => uploadPhotos(e.target.files));
+            const hero = document.getElementById('heroInput');
+            if (hero) hero.addEventListener('change', async (e) => {
+                const file = e.target.files && e.target.files[0];
+                if (!file) return;
+                const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '');
+                const path = `hero-${Date.now()}.${ext}`;
+                const { error } = await db.storage.from('photos').upload(path, file, { cacheControl: '3600', upsert: true });
+                if (error) { showToast('Échec upload : ' + error.message); return; }
+                const { data: pub } = db.storage.from('photos').getPublicUrl(path);
+                pendingHeroUrl = pub.publicUrl;
+                document.getElementById('heroPreview').src = pendingHeroUrl;
+                showToast('Image de couverture sélectionnée — cliquez sur « Enregistrer le contenu »');
+            });
+        });
+
+        async function openPhotoCaption(id) {
+            const p = (await db.from('gallery').select('id, caption').eq('id', id).single()).data;
+            if (!p) return;
+            const caption = prompt('Légende de la photo :', p.caption || '');
+            if (caption === null) return;
+            const { error } = await db.from('gallery').update({ caption: caption.trim() }).eq('id', id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            showToast('Légende modifiée ✔');
+            loadGalleryAdmin();
+        }
+
+        async function deletePhoto(id) {
+            if (!confirm('Supprimer cette photo ?')) return;
+            const { error } = await db.from('gallery').delete().eq('id', id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            showToast('Photo supprimée ✔');
+            loadGalleryAdmin();
+        }
+
+        // ===== BLOQUER UN CRÉNEAU =====
+        let blockTarget = { date: '', time: '' };
+
+        function openBlockModal(dateKey, time) {
+            blockTarget = { date: dateKey, time };
+            document.getElementById('blockDate').value = formatDate(dateKey);
+            document.getElementById('blockTime').value = time;
+            document.getElementById('blockNote').value = '';
+            openModal('blockModal');
+        }
+
+        async function confirmBlock() {
+            const note = document.getElementById('blockNote').value.trim();
+            const { error } = await db.from('blocked_slots').insert([{
+                date: blockTarget.date,
+                time: blockTarget.time,
+                note: note || ''
+            }]);
+            if (error) {
+                if (error.code === '23505') showToast('Ce créneau est déjà bloqué');
+                else showToast('Erreur : ' + error.message);
+                return;
+            }
+            closeModal('blockModal');
+            showToast('Créneau bloqué ✔ (masqué aux clients)');
+            await loadBlockedSlots();
+            renderWeekCalendar();
+        }
+
+        async function loadBlockedSlots() {
+            const { data, error } = await db
+                .from('blocked_slots')
+                .select('id, date, time, note');
+            if (error) { console.error('loadBlockedSlots', error); return; }
+            blockedSlotsCache = data || [];
+        }
+
+        async function unblockSlot(id) {
+            const { error } = await db.from('blocked_slots').delete().eq('id', id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            showToast('Créneau débloqué ✔');
+            await loadBlockedSlots();
+            renderWeekCalendar();
         }
     </script>
 </body>

@@ -17,10 +17,20 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
   - Connexion par email / mot de passe (Supabase Auth)
   - Vue d'ensemble : statistiques (aujourd'hui, en attente, à venir, total)
   - Filtres (statut, période, recherche)
+  - Vue **Semaine** : planning visuel des créneaux (Tableau ⇄ Semaine)
   - Détails d'un rendez-vous (client, notes, contact direct appeler / WhatsApp)
   - Modifier un rendez-vous (service, prix, date, heure, client, statut)
   - Confirmer / annuler / supprimer un rendez-vous → les créneaux se libèrent
     automatiquement pour les clients une fois annulés
+- **Galerie animée** sur la page d'accueil, pilotable depuis l'admin :
+  - Ajout / suppression de photos, légendes, ordre
+- **Contenu du site éditable** depuis l'admin (sans toucher au code) :
+  - Couleurs globales et par section, textes des titres/paragraphes,
+    image de couverture (hero)
+- **Horaires puisant dans une base de données** : réglables depuis l'admin,
+  appliqués à la fois au calendrier de réservation et à la section "Horaires"
+- **Blocage de créneaux** depuis le calendrier admin (ex. congés, indisponibilités) :
+  ils sont **masqués aux clients** du site public
 
 ## Prérequis
 
@@ -120,13 +130,17 @@ Puis ouvrez http://localhost:8080
 
 | Fichier          | Rôle                                              |
 |------------------|---------------------------------------------------|
-| `index.html`     | Site public (design + réservation)                |
-| `admin.html`     | Espace admin sécurisé (gestion des rendez-vous)   |
+| `index.html`     | Site public (design, galerie, réservation)      |
+| `admin.html`     | Espace admin sécurisé (réservations, galerie, contenu, horaires) |
 | `config.js`      | Clés Supabase + numéro WhatsApp                   |
 | `database.sql`   | Script SQL à exécuter dans Supabase (une fois)    |
 
 ## Personnalisation rapide
 
 - **WhatsApp** : modifiez `WA_NUMBER` dans `config.js` (format international sans `+`)
-- **Horaires d'ouverture** : modifiez `OPEN_HOURS` dans `index.html` (objet JS)
+- **Contenu / couleurs / horaires / galerie** : connectez-vous sur `admin.html`
+  → onglets **Galerie**, **Contenu**, **Horaires** (le changement est appliqué
+  immédiatement sur le site public)
+- **Horaires d'ouverture** : onglet **Horaires** de l'admin (ou défaut dans
+  `OPEN_HOURS` dans `index.html`)
 - **Prestations / prix** : modifiez l'objet `SERVICES` dans `index.html`
