@@ -247,6 +247,87 @@
             font-size: 0.95rem;
         }
 
+        /* ===== Bascule Tableau / Semaine ===== */
+        .view-toggle {
+            display: inline-flex; gap: 0.4rem; background: var(--color-cream);
+            padding: 0.35rem; border-radius: 50px; margin-bottom: 1.5rem;
+        }
+        .view-btn {
+            border: none; background: transparent; padding: 0.55rem 1.4rem;
+            border-radius: 50px; font-family: var(--font-body); font-size: 0.78rem;
+            font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase;
+            cursor: pointer; color: var(--color-text-light); transition: all 0.2s;
+        }
+        .view-btn.active {
+            background: var(--color-white); color: var(--color-text);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        /* ===== Calendrier Semaine ===== */
+        .week-view { display: none; }
+        .week-toolbar { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .week-month { font-family: var(--font-heading); font-size: 1.3rem; color: var(--color-text); min-width: 130px; text-align: center; }
+        .week-nav {
+            width: 38px; height: 38px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.12);
+            background: var(--color-white); color: var(--color-text); cursor: pointer;
+            font-size: 1.1rem; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; line-height: 1;
+        }
+        .week-nav:hover { border-color: var(--color-accent); color: var(--color-accent-dark); }
+        .week-caption { font-size: 0.82rem; color: var(--color-text-light); }
+
+        .week-headers {
+            display: flex; background: var(--color-white);
+            border: 1px solid rgba(0,0,0,0.08); border-bottom: none;
+            border-radius: 16px 16px 0 0; overflow: hidden;
+        }
+        .week-headers .corner { width: 52px; flex-shrink: 0; border-right: 1px solid rgba(0,0,0,0.06); }
+        .week-headers .wday {
+            flex: 1; text-align: center; padding: 0.75rem 0.2rem;
+            font-size: 0.74rem; color: var(--color-text-light); border-left: 1px solid rgba(0,0,0,0.06);
+        }
+        .week-headers .wday .d { font-weight: 600; }
+        .week-headers .wday.today { color: var(--color-accent-dark); }
+        .week-headers .wday.today .d { font-weight: 700; }
+
+        .week-grid {
+            display: flex; background: var(--color-white);
+            border: 1px solid rgba(0,0,0,0.08); border-top: none;
+            border-radius: 0 0 16px 16px; overflow: hidden;
+        }
+        .time-axis { width: 52px; flex-shrink: 0; position: relative; background: var(--color-bg); }
+        .time-label {
+            position: absolute; right: 8px; transform: translateY(-50%);
+            font-size: 0.68rem; color: var(--color-text-light);
+        }
+        .day-col { flex: 1; position: relative; border-left: 1px solid rgba(0,0,0,0.05); background: var(--color-white); }
+        .day-col.closed {
+            background: repeating-linear-gradient(45deg, var(--color-cream) 0 10px, #f1ebe2 10px 20px);
+        }
+        .day-col .lines {
+            position: absolute; inset: 0; pointer-events: none;
+            background-image: repeating-linear-gradient(to bottom, rgba(0,0,0,0.07) 0 1px, transparent 1px 56px);
+        }
+        .cal-evt {
+            position: absolute; border-radius: 6px; padding: 3px 6px;
+            font-size: 0.68rem; line-height: 1.25; overflow: hidden; color: #fff;
+            cursor: pointer; z-index: 2;
+        }
+        .cal-evt .t { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cal-evt .c { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; opacity: 0.92; }
+        .cal-evt.pending { background: linear-gradient(135deg, #c9a87c, #b8935f); }
+        .cal-evt.confirmed { background: linear-gradient(135deg, #1a1512, #32281f); }
+        .cal-evt.done { background: linear-gradient(135deg, #8a9d8b, #6f856f); color: #fff; }
+        .cal-evt.cancelled { background: #e4ded6; color: #b3a89d; }
+        .cal-evt.blocked {
+            background: repeating-linear-gradient(45deg, #1a1512, #1a1512 8px, #2c231a 8px 16px);
+            color: #fff;
+        }
+        .week-closed {
+            position: absolute; inset: 24px 0 auto 0; text-align: center;
+            color: var(--color-text-light); font-size: 0.76rem; font-style: italic;
+        }
+
         @media (max-width: 768px) {
             .stats { grid-template-columns: repeat(2, 1fr); }
             .modal-grid { grid-template-columns: 1fr; }
@@ -294,6 +375,11 @@
         </div>
 
         <div class="main">
+            <div class="view-toggle">
+                <button class="view-btn active" id="viewBtnList" onclick="showView('list')">Tableau</button>
+                <button class="view-btn" id="viewBtnWeek" onclick="showView('week')">Semaine</button>
+            </div>
+
             <!-- Stats -->
             <div class="stats" id="statsRow" style="display:none;">
                 <div class="stat-card"><div class="value today" id="statToday">—</div><div class="label">Aujourd'hui</div></div>
@@ -338,6 +424,22 @@
                 </table>
             </div>
             <div class="loading" id="loadingMsg">Chargement des réservations...</div>
+
+            <!-- Calendrier semaine -->
+            <div class="week-view" id="weekView">
+                <div class="week-toolbar">
+                    <button class="btn btn-small btn-dark" onclick="goToCurrentWeek()">Aujourd'hui</button>
+                    <button class="week-nav" onclick="shiftWeek(-1)" title="Semaine précédente">‹</button>
+                    <span class="week-month" id="weekMonth">—</span>
+                    <button class="week-nav" onclick="shiftWeek(1)" title="Semaine suivante">›</button>
+                    <span class="week-caption" id="weekCaption"></span>
+                </div>
+                <div class="week-headers" id="weekHeaders"></div>
+                <div class="week-grid">
+                    <div class="time-axis" id="timeAxis"></div>
+                    <div id="weekDays" style="display:flex;flex:1;"></div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -537,6 +639,7 @@
             document.getElementById('tableWrap').style.display = 'block';
             updateStats();
             applyFilters();
+            if (document.getElementById('weekView').style.display === 'block') renderWeekCalendar();
         }
 
         function updateStats() {
@@ -700,6 +803,183 @@
             closeModal('editModal');
             showToast('Rendez-vous supprimé');
             loadBookings();
+        }
+
+        // ===== VUE CALENDRIER SEMAINE =====
+        const CAL_PX_PER_HOUR = 56;
+        const CAL_GRID_START = 8;   // 08:00
+        const CAL_GRID_END = 20;    // 20:00
+        const CAL_DAY_NAMES = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+        const CAL_DURATIONS = {
+            'Forfait Balayage': 180, 'Forfait Refresh Balayage': 150, 'Forfait Patine': 120,
+            'Forfait Mèche cheveux court': 90, 'Coloration Racine': 90, 'Coloration totale': 120,
+            'Coupe & Brushing': 60, 'Brushing': 45, 'Cut and Go': 20
+        };
+        let calMonday = null;
+
+        function showView(view) {
+            const isWeek = view === 'week';
+            document.getElementById('viewBtnList').classList.toggle('active', !isWeek);
+            document.getElementById('viewBtnWeek').classList.toggle('active', isWeek);
+            document.getElementById('statsRow').style.display = isWeek ? 'none' : 'grid';
+            document.getElementById('filtersRow').style.display = isWeek ? 'none' : 'flex';
+            document.getElementById('tableWrap').style.display = isWeek ? 'none' : 'block';
+            document.getElementById('weekView').style.display = isWeek ? 'block' : 'none';
+            if (isWeek) renderWeekCalendar();
+        }
+
+        function calAddDays(d, n) {
+            const x = new Date(d);
+            x.setDate(x.getDate() + n);
+            return x;
+        }
+
+        function calToMin(t) {
+            const [h, m] = t.split(':').map(Number);
+            return h * 60 + m;
+        }
+
+        function calDateKey(d) {
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function calMonthLabel(d) {
+            return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        }
+
+        function mondayOf(d) {
+            const x = new Date(d);
+            x.setHours(0, 0, 0, 0);
+            const dow = (x.getDay() + 6) % 7;
+            x.setDate(x.getDate() - dow);
+            return x;
+        }
+
+        function calDurationFor(service) {
+            return CAL_DURATIONS[service] || 60;
+        }
+
+        // Place les rendez-vous concurrents en sous-colonnes de largeurs égales
+        function calLayoutDay(list) {
+            const sorted = list.slice().sort((a, b) => a.startMin - b.startMin || b.dur - a.dur);
+            const colEnds = [];
+            const placed = [];
+            for (const ev of sorted) {
+                let c = colEnds.findIndex(end => end <= ev.startMin);
+                if (c === -1) { c = colEnds.length; colEnds.push(0); }
+                colEnds[c] = ev.startMin + ev.dur;
+                placed.push({ ev, col: c });
+            }
+            const n = colEnds.length;
+            return placed.map(({ ev, col }) => ({
+                ...ev,
+                top: (ev.startMin - CAL_GRID_START * 60) / 60 * CAL_PX_PER_HOUR,
+                height: ev.dur / 60 * CAL_PX_PER_HOUR,
+                left: (col * (100 / n)) + '%',
+                width: (100 / n) + '%'
+            }));
+        }
+
+        function renderWeekCalendar() {
+            if (!calMonday) calMonday = mondayOf(new Date());
+            const totalPx = (CAL_GRID_END - CAL_GRID_START) * CAL_PX_PER_HOUR;
+            const todayKey = calDateKey(new Date());
+
+            // Toolbar
+            const end = calAddDays(calMonday, 6);
+            document.getElementById('weekMonth').textContent = calMonthLabel(calMonday);
+            document.getElementById('weekCaption').textContent =
+                `Semaine du ${calMonday.getDate()}/${calMonday.getMonth() + 1} au ${end.getDate()}/${end.getMonth() + 1}`;
+
+            // En-têtes des jours
+            let hhtml = '<div class="corner"></div>';
+            for (let i = 0; i < 7; i++) {
+                const d = calAddDays(calMonday, i);
+                const key = calDateKey(d);
+                const dayName = CAL_DAY_NAMES[d.getDay()];
+                const isToday = key === todayKey ? ' today' : '';
+                hhtml += `<div class="wday${isToday}"><span class="d">${dayName}. ${d.getDate()}</span></div>`;
+            }
+            document.getElementById('weekHeaders').innerHTML = hhtml;
+
+            // Axe des heures
+            const axis = document.getElementById('timeAxis');
+            axis.style.height = totalPx + 'px';
+            axis.innerHTML = '';
+            for (let h = CAL_GRID_START; h < CAL_GRID_END; h++) {
+                const lbl = document.createElement('span');
+                lbl.className = 'time-label';
+                lbl.style.top = ((h - CAL_GRID_START) * CAL_PX_PER_HOUR) + 'px';
+                lbl.textContent = h;
+                axis.appendChild(lbl);
+            }
+
+            // Colonnes des jours
+            const daysWrap = document.getElementById('weekDays');
+            daysWrap.innerHTML = '';
+
+            for (let i = 0; i < 7; i++) {
+                const d = calAddDays(calMonday, i);
+                const key = calDateKey(d);
+                const col = document.createElement('div');
+                col.className = 'day-col';
+                col.style.height = totalPx + 'px';
+
+                const lines = document.createElement('div');
+                lines.className = 'lines';
+                col.appendChild(lines);
+
+                // Lundi (i=0) et dimanche (i=6) : fermé
+                const closed = (i === 0 || i === 6);
+                if (closed) {
+                    col.classList.add('closed');
+                    const lbl = document.createElement('div');
+                    lbl.className = 'week-closed';
+                    lbl.textContent = 'Fermé';
+                    col.appendChild(lbl);
+                } else {
+                    const events = allBookings
+                        .filter(b => b.date === key)
+                        .map(b => ({
+                            id: b.id,
+                            startMin: calToMin(b.time),
+                            dur: calDurationFor(b.service_name),
+                            status: b.status,
+                            service: b.service_name,
+                            client: b.client_name
+                        }))
+                        .filter(e => e.startMin >= CAL_GRID_START * 60 && e.startMin < CAL_GRID_END * 60);
+
+                    for (const ev of calLayoutDay(events)) {
+                        const card = document.createElement('div');
+                        card.className = 'cal-evt ' + (ev.status === 'cancelled' ? 'cancelled' : ev.status);
+                        card.style.top = ev.top + 'px';
+                        card.style.height = Math.max(18, ev.height) + 'px';
+                        card.style.left = ev.left;
+                        card.style.width = ev.width;
+                        card.title = `${ev.service} — ${ev.client} · ${ev.id}`;
+                        card.onclick = () => onCalEventClick(ev.id);
+                        card.innerHTML = `<div class="t">${escapeHtml(ev.service)}</div><div class="c">${escapeHtml(ev.client)}</div>`;
+                        col.appendChild(card);
+                    }
+                }
+                daysWrap.appendChild(col);
+            }
+        }
+
+        function onCalEventClick(id) {
+            showView('week');
+            openDetails(id);
+        }
+
+        function shiftWeek(n) {
+            calMonday = calAddDays(mondayOf(calMonday), n * 7);
+            renderWeekCalendar();
+        }
+
+        function goToCurrentWeek() {
+            calMonday = mondayOf(new Date());
+            renderWeekCalendar();
         }
 
         // ===== MODALS & TOAST =====
