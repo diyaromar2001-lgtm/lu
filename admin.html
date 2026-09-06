@@ -77,6 +77,25 @@
             padding: 0.8rem 1rem; border-radius: 10px; font-size: 0.85rem;
             display: none;
         }
+        .auth-tabs {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .auth-tab {
+            padding: 0.7rem; border-radius: 12px; border: 2px solid rgba(0,0,0,0.08);
+            background: var(--color-bg); font-family: var(--font-body);
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            color: var(--color-text-light); transition: all 0.2s;
+        }
+        .auth-tab:hover { border-color: var(--color-accent); }
+        .auth-tab.active {
+            background: var(--color-accent); border-color: var(--color-accent);
+            color: white;
+        }
+        .mode-hint {
+            text-align: center; font-size: 0.8rem; color: var(--color-text-light);
+            margin-top: 0.25rem;
+        }
         .auth-switch {
             text-align: center; margin-top: 1.2rem; font-size: 0.85rem;
             color: var(--color-text-light);
@@ -242,8 +261,14 @@
         <div class="auth-card">
             <h1>PreTalli <em>Admin</em></h1>
             <p class="subtitle" id="authSubtitle">Connexion à l'espace d'administration</p>
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tabLogin" onclick="switchMode(false)">Connexion</button>
+                <button class="auth-tab" id="tabSignup" onclick="switchMode(true)">Inscription</button>
+            </div>
             <div class="auth-form">
-                <div class="auth-error" id="authError"></div>
+                <div class="auth-error" id="authError">
+                    <span id="authErrorText"></span>
+                </div>
                 <div class="form-group">
                     <label for="authEmail">Email</label>
                     <input type="email" id="authEmail" placeholder="vous@exemple.com">
@@ -253,9 +278,7 @@
                     <input type="password" id="authPassword" placeholder="••••••••">
                 </div>
                 <button class="btn btn-primary" id="authBtn" style="width:100%;justify-content:center;">Se connecter</button>
-            </div>
-            <div class="auth-switch" id="authSwitch">
-                <span>Première fois ? </span><button id="switchBtn">Créer un compte</button>
+                <p class="mode-hint" id="modeHint">Déjà inscrit(e) ? Cliquez sur « Connexion ».</p>
             </div>
         </div>
     </div>
@@ -394,8 +417,7 @@
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (e) {
             console.error('Supabase init error', e);
-            document.getElementById('authError').textContent = 'Erreur de configuration. Vérifiez config.js';
-            document.getElementById('authError').style.display = 'block';
+            showAuthError('Erreur de configuration. Vérifiez config.js');
         }
 
         const SERVICES = [
@@ -417,20 +439,30 @@
 
         // ===== AUTH =====
         let isSignUpMode = false;
-        document.getElementById('switchBtn').addEventListener('click', () => {
-            isSignUpMode = !isSignUpMode;
-            document.getElementById('authBtn').textContent = isSignUpMode ? 'Créer le compte' : 'Se connecter';
-            document.getElementById('authSubtitle').textContent = isSignUpMode
+
+        function switchMode(signup) {
+            isSignUpMode = signup;
+            document.getElementById('tabLogin').classList.toggle('active', !signup);
+            document.getElementById('tabSignup').classList.toggle('active', signup);
+            document.getElementById('authBtn').textContent = signup ? 'Créer le compte' : 'Se connecter';
+            document.getElementById('authSubtitle').textContent = signup
                 ? 'Créez votre compte administrateur' : 'Connexion à l\'espace d\'administration';
-            document.getElementById('switchBtn').textContent = isSignUpMode ? 'Se connecter' : 'Créer un compte';
-        });
+            document.getElementById('modeHint').textContent = signup
+                ? 'Première fois ? Complétez le formulaire ci-dessous.' : 'Déjà inscrit(e) ? Renseignez vos identifiants.';
+            document.getElementById('authError').style.display = 'none';
+        }
+
+        function showAuthError(msg) {
+            document.getElementById('authErrorText').textContent = msg;
+            document.getElementById('authError').style.display = 'block';
+        }
 
         document.getElementById('authBtn').addEventListener('click', async () => {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authPassword').value;
             const errBox = document.getElementById('authError');
             errBox.style.display = 'none';
-            if (!email || !password) { errBox.textContent = 'Renseignez email et mot de passe'; errBox.style.display = 'block'; return; }
+            if (!email || !password) { showAuthError('Renseignez email et mot de passe'); return; }
 
             document.getElementById('authBtn').textContent = 'Patientez...';
             try {
@@ -439,9 +471,8 @@
                     if (error) throw error;
                     if (data.session) { onLoggedIn(data.session.user.email); }
                     else {
-                        errBox.textContent = 'Compte créé ! Vérifiez votre email pour confirmer, puis connectez-vous. (Vous pouvez aussi désactiver la confirmation dans Supabase → Authentication → Providers → Email)';
-                        errBox.style.display = 'block';
-                        isSignUpMode = false;
+                        showAuthError('Compte créé ! Confirmez votre email (voir vos mails, même le spam), puis cliquez sur « Connexion ». (Vous pouvez désactiver la confirmation dans Supabase → Authentication → Providers → Email)');
+                        switchMode(false);
                         document.getElementById('authBtn').textContent = 'Se connecter';
                     }
                 } else {
@@ -450,8 +481,7 @@
                     onLoggedIn(data.user.email);
                 }
             } catch (e) {
-                errBox.textContent = e.message || 'Erreur de connexion';
-                errBox.style.display = 'block';
+                showAuthError(e.message || 'Erreur de connexion');
             }
             document.getElementById('authBtn').textContent = isSignUpMode ? 'Créer le compte' : 'Se connecter';
         });
