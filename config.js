@@ -12,8 +12,8 @@
 //    Elle donne un accès total. Utilise uniquement la clé "anon".
 // ============================================================
 
-const SUPABASE_URL = 'https://VOTRE-PROJET.supabase.co';
-const SUPABASE_ANON_KEY = 'COLLEZ-VOTRE-CLE-ANON-ICI';
+const SUPABASE_URL = 'https://aoikznxagjkktotlwdol.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-XnSiNmlpOZxt4A01OmYUw_71UvfT1W';
 
 // Numéro WhatsApp de la coiffeuse (format international sans +)
 const WA_NUMBER = '41796935978';
