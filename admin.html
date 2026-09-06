@@ -412,9 +412,9 @@
 
     <script>
         // ===== CONFIG =====
-        let supabase = null;
+        let db = null;
         try {
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         } catch (e) {
             console.error('Supabase init error', e);
             showAuthError('Erreur de configuration. Vérifiez config.js');
@@ -467,7 +467,7 @@
             document.getElementById('authBtn').textContent = 'Patientez...';
             try {
                 if (isSignUpMode) {
-                    const { data, error } = await supabase.auth.signUp({ email, password });
+                    const { data, error } = await db.auth.signUp({ email, password });
                     if (error) throw error;
                     if (data.session) { onLoggedIn(data.session.user.email); }
                     else {
@@ -476,7 +476,7 @@
                         document.getElementById('authBtn').textContent = 'Se connecter';
                     }
                 } else {
-                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    const { data, error } = await db.auth.signInWithPassword({ email, password });
                     if (error) throw error;
                     onLoggedIn(data.user.email);
                 }
@@ -487,11 +487,11 @@
         });
 
         // Check existing session
-        supabase.auth.getSession().then(({ data }) => {
+        db.auth.getSession().then(({ data }) => {
             if (data.session) onLoggedIn(data.session.user.email);
         });
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        db.auth.onAuthStateChange((event, session) => {
             if (session) onLoggedIn(session.user.email);
             else if (event === 'SIGNED_OUT') onLoggedOut();
         });
@@ -510,7 +510,7 @@
         }
 
         async function logout() {
-            await supabase.auth.signOut();
+            await db.auth.signOut();
             onLoggedOut();
         }
 
@@ -521,7 +521,7 @@
             document.getElementById('tableWrap').style.display = 'none';
             document.getElementById('loadingMsg').style.display = 'block';
 
-            const { data, error } = await supabase
+            const { data, error } = await db
                 .from('bookings')
                 .select('*')
                 .order('date', { ascending: false })
@@ -676,7 +676,7 @@
                 showToast('Nom, téléphone, date et heure sont obligatoires');
                 return;
             }
-            const { error } = await supabase.from('bookings').update(updates).eq('id', id);
+            const { error } = await db.from('bookings').update(updates).eq('id', id);
             if (error) { showToast('Erreur : ' + error.message); return; }
             closeModal('editModal');
             showToast('Rendez-vous modifié ✔');
@@ -687,7 +687,7 @@
             const b = findRow(id);
             if (!b) return;
             if (status === 'cancelled' && !confirm('Annuler ce rendez-vous ? Le créneau redeviendra libre pour les clients.')) return;
-            const { error } = await supabase.from('bookings').update({ status }).eq('id', id);
+            const { error } = await db.from('bookings').update({ status }).eq('id', id);
             if (error) { showToast('Erreur : ' + error.message); return; }
             showToast(status === 'cancelled' ? 'Rendez-vous annulé' : 'Rendez-vous confirmé ✔');
             loadBookings();
@@ -695,7 +695,7 @@
 
         async function removeBooking() {
             if (!confirm('Supprimer définitivement ce rendez-vous ? Cette action est irréversible.')) return;
-            const { error } = await supabase.from('bookings').delete().eq('id', currentRow.id);
+            const { error } = await db.from('bookings').delete().eq('id', currentRow.id);
             if (error) { showToast('Erreur : ' + error.message); return; }
             closeModal('editModal');
             showToast('Rendez-vous supprimé');
