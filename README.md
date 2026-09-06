@@ -13,7 +13,14 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
   4. Coordonnées + confirmation
 - Les créneaux déjà réservés sont **bloqués pour tous les visiteurs** (via Supabase)
 - Confirmation envoyée à la coiffeuse par **WhatsApp**
-- La coiffeuse consulte/gère les réservations dans le dashboard Supabase
+- **Espace admin sécurisé** (`admin.html`) :
+  - Connexion par email / mot de passe (Supabase Auth)
+  - Vue d'ensemble : statistiques (aujourd'hui, en attente, à venir, total)
+  - Filtres (statut, période, recherche)
+  - Détails d'un rendez-vous (client, notes, contact direct appeler / WhatsApp)
+  - Modifier un rendez-vous (service, prix, date, heure, client, statut)
+  - Confirmer / annuler / supprimer un rendez-vous → les créneaux se libèrent
+    automatiquement pour les clients une fois annulés
 
 ## Prérequis
 
@@ -49,29 +56,50 @@ const SUPABASE_URL = 'https://VOTRE-PROJET.supabase.co';   // ← Project URL
 const SUPABASE_ANON_KEY = 'COLLEZ-VOTRE-CLE-ANON-ICI';      // ← anon public key
 ```
 
-### 5. Mettre en ligne
+### 5. Configurer l'email administrateur (IMPORTANT)
 
-Hébergez les **4 fichiers** suivants sur n'importe quel hébergeur
+1. Ouvrez `database.sql`
+2. Remplacez `CHANGE-MOI@exemple.com` par votre email
+3. Exécutez le script dans **SQL Editor** comme décrit ci-dessus
+   (le script est « idempotent » : vous pouvez le re-exécuter sans risque)
+
+### 6. Créer le compte admin
+
+1. Allez sur `votre-site/admin.html`
+2. Cliquez sur **« Créer un compte »**
+3. Renseignez votre email (celui mis dans `database.sql`) + un mot de passe
+4. (Si Supabase exige la confirmation email, vérifiez votre boîte mail.
+   Pour désactiver : Supabase → Authentication → Providers → Email → Confirm email)
+
+### 7. Mettre en ligne
+
+Hébergez les **5 fichiers** suivants sur n'importe quel hébergeur
 (GitHub Pages, Netlify, Vercel, hosting classique...):
 
 ```
 pretalli-site/
 ├── index.html
+├── admin.html
 ├── config.js
 ├── database.sql   (optionnel, pour référence)
 └── README.md      (optionnel, pour référence)
 ```
 
-## Gérer les réservations (côté coiffeuse)
+## Utiliser l'espace admin
 
-Dans l'interface Supabase :
+Rendez-vous sur `votre-site/admin.html` et connectez-vous :
 
-- **Table Editor** → table `bookings` : voir toutes les demandes
-  (nom, téléphone, prestation, date, heure, statut)
-- Pour **annuler** une demande (créneau reperdu pour les clients) :
-  passez `status` de `pending` à `cancelled`
+- **Statistiques** : aujourd'hui, en attente, à venir, total
+- **Filtres** : statut (attente/confirmé/terminé/annulé), période, recherche
+- **👁** voir le détail complet d'un rendez-vous
+- **✏️** modifier un rendez-vous
+- **✓** confirmer une demande (passe de « en attente » à « confirmé »)
+- **✕** annuler un rendez-vous → le créneau redevient **libre** pour les clients
+- **🗑** supprimer définitivement
 
-Le site ignore automatiquement les lignes avec `status = 'cancelled'`.
+> Sécurité : seul l'email inscrit dans la table `admins` peut voir et gérer
+> les rendez-vous. Les visiteurs du site ne voient que les créneaux occupés
+> (date + heure), jamais les données clients.
 
 ## Développement en local
 
@@ -92,8 +120,9 @@ Puis ouvrez http://localhost:8080
 
 | Fichier          | Rôle                                              |
 |------------------|---------------------------------------------------|
-| `index.html`     | Site complet (design + logique de réservation)    |
-| `config.js`      | Vos clés Supabase + numéro WhatsApp               |
+| `index.html`     | Site public (design + réservation)                |
+| `admin.html`     | Espace admin sécurisé (gestion des rendez-vous)   |
+| `config.js`      | Clés Supabase + numéro WhatsApp                   |
 | `database.sql`   | Script SQL à exécuter dans Supabase (une fois)    |
 
 ## Personnalisation rapide

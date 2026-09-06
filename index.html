@@ -708,6 +708,7 @@
             <a href="https://www.facebook.com/p/Pretalli-Coiffure-100044976343542/" target="_blank">Facebook</a>
             <a href="#booking">Réservation</a>
             <a href="https://wa.me/41796935978" target="_blank">WhatsApp</a>
+            <a href="admin.html" style="opacity:0.4;">Admin</a>
         </div>
         <p style="margin-top:1rem;font-size:0.75rem;opacity:0.5;">&copy; 2026 PreTalli Coiffure. Tous droits réservés.</p>
     </footer>
@@ -764,13 +765,12 @@
     }
 
     // Récupère les créneaux déjà réservés depuis Supabase
-    // (toutes les références passées et à venir, statut != 'cancelled')
+    // via la vue publique (ne contient que date/heure, pas les données clients)
     async function loadBookedSlots() {
         if (!supabase) return;
         const { data, error } = await supabase
-            .from('bookings')
-            .select('date, time')
-            .neq('status', 'cancelled');
+            .from('public_slots')
+            .select('date, time');
         if (error) { console.error('loadBookedSlots error', error); return; }
         bookedSlotsCache = {};
         (data || []).forEach(b => {
