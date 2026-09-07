@@ -368,8 +368,21 @@
         .cfg-field textarea { resize: vertical; min-height: 76px; }
         .cfg-field input:focus, .cfg-field textarea:focus { border-color: var(--color-accent); }
         .cfg-full { grid-column: 1 / -1; }
-        .hero-row { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; margin-top: 0.5rem; }
-        .hero-row img { height: 84px; width: 130px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); }
+        .hero-row { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; margin-top: 0.5rem; }
+        .hero-preview-box {
+            width: 220px; height: 130px; border-radius: 12px; overflow: hidden;
+            border: 2px dashed rgba(0,0,0,0.12); background: var(--color-cream);
+            display: flex; align-items: center; justify-content: center; position: relative;
+        }
+        .hero-preview-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .hero-preview-box .hero-reset {
+            position: absolute; top: 0.3rem; right: 0.3rem;
+            width: 26px; height: 26px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.6); color: #fff; cursor: pointer;
+            font-size: 0.8rem; display: flex; align-items: center; justify-content: center;
+        }
+        .hero-preview-box .hero-reset:hover { background: var(--color-danger); }
+        .hero-info { font-size: 0.78rem; color: var(--color-text-light); line-height: 1.5; }
         .panel-actions { display: flex; gap: 0.75rem; align-items: center; margin-top: 1.25rem; flex-wrap: wrap; }
         .panel-actions .hint { font-size: 0.78rem; color: var(--color-text-light); }
 
@@ -521,13 +534,19 @@
             <!-- ===== PANNEAU CONTENU ===== -->
             <div class="panel" id="panelContent">
                 <div class="cfg-card">
-                    <h3>Image de couverture</h3>
+                    <h3>Image de couverture (hero)</h3>
                     <div class="hero-row">
-                        <img id="heroPreview" alt="Aperçu" src="">
+                        <div class="hero-preview-box">
+                            <img id="heroPreview" alt="Aperçu" src="">
+                            <button class="hero-reset" id="heroReset" title="Rétablir l'image par défaut" style="display:none;">✕</button>
+                        </div>
                         <div>
                             <button class="btn btn-small btn-dark" onclick="document.getElementById('heroInput').click()">Choisir une image</button>
-                            <span class="gal-hint">Grande photo d'accueil (16:9 conseillé).</span>
                             <input type="file" id="heroInput" accept="image/*" style="display:none;">
+                            <p class="hero-info" style="margin-top:0.5rem;">
+                                Grande photo d'accueil du site (format 16:9 conseillé).<br>
+                                <em>Laissez vide pour l'image par défaut.</em>
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -1287,6 +1306,10 @@
             // Aperçu hero
             if (currentSettings.hero_image) {
                 document.getElementById('heroPreview').src = currentSettings.hero_image;
+                document.getElementById('heroReset').style.display = 'flex';
+            } else {
+                document.getElementById('heroPreview').src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80';
+                document.getElementById('heroReset').style.display = 'none';
             }
         }
 
@@ -1444,7 +1467,16 @@
                 const { data: pub } = db.storage.from('photos').getPublicUrl(path);
                 pendingHeroUrl = pub.publicUrl;
                 document.getElementById('heroPreview').src = pendingHeroUrl;
+                document.getElementById('heroReset').style.display = 'flex';
                 showToast('Image de couverture sélectionnée — cliquez sur « Enregistrer le contenu »');
+            });
+            const heroReset = document.getElementById('heroReset');
+            if (heroReset) heroReset.addEventListener('click', () => {
+                pendingHeroUrl = '';
+                currentSettings.hero_image = '';
+                document.getElementById('heroPreview').src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80';
+                heroReset.style.display = 'none';
+                showToast('Image réinitialisée — cliquez sur « Enregistrer le contenu »');
             });
         });
 
