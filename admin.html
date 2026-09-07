@@ -1154,6 +1154,7 @@
                         <td>${created}</td>
                         <td>
                             <div class="row-actions">
+                                <button class="icon-btn" title="Envoyer un rappel WhatsApp" onclick="openWaReminder(findRow('${b.id}'))">💬</button>
                                 <button class="icon-btn" title="Voir détails" onclick="openDetails('${b.id}')">👁</button>
                                 <button class="icon-btn" title="Fiche cliente" data-phone="${escapeHtml(b.client_phone)}" onclick="openClientByPhone(this.dataset.phone)">👤</button>
                                 <button class="icon-btn" title="Modifier" onclick="openEditFromId('${b.id}')">✏️</button>
@@ -1300,6 +1301,10 @@
                 <div class="detail-row"><span>Email</span><span>${escapeHtml(b.client_email || '—')}</span></div>
                 <div class="detail-row"><span>Notes</span><span>${escapeHtml(b.client_notes || '—')}</span></div>
                 <div class="detail-row"><span>Statut</span><span class="badge ${b.status}">${STATUS_LABELS[b.status] || b.status}</span></div>
+                <div style="display:flex;gap:0.5rem;margin-top:0.9rem;flex-wrap:wrap;">
+                    <button class="btn btn-ghost btn-small" onclick="openWaConfirmation(currentRow)">💬 Confirmer (WhatsApp)</button>
+                    <button class="btn btn-ghost btn-small" onclick="openWaReminder(currentRow)">💬 Rappel (WhatsApp)</button>
+                </div>
             `;
             openModal('detailsModal');
         }
@@ -1423,6 +1428,28 @@
         // ===== FICHES CLIENTES =====
         function normPhone(p) {
             return String(p || '').replace(/\D/g, '');
+        }
+
+        // ===== WHATSAPP : rappels & confirmations (message prérempli) =====
+        function formatDateLong(dateStr) {
+            return new Date(dateStr + 'T00:00:00').toLocaleDateString('fr-CH', { weekday: 'long', day: 'numeric', month: 'long' });
+        }
+        function waLink(phone, text) {
+            return `https://wa.me/${normPhone(phone)}?text=${encodeURIComponent(text)}`;
+        }
+        function waConfirmationText(b) {
+            return `Bonjour ${b.client_name} ✂️, votre rendez-vous chez PreTalli Coiffure est confirmé : ${b.service_name}, le ${formatDateLong(b.date)} à ${b.time}. Nous vous attendons !`;
+        }
+        function waReminderText(b) {
+            return `Bonjour ${b.client_name} ✂️, petit rappel : ${b.service_name}, le ${formatDateLong(b.date)} à ${b.time} chez PreTalli Coiffure. Au plaisir de vous voir !`;
+        }
+        function openWaConfirmation(b) {
+            if (!b) return showToast('Rendez-vous introuvable');
+            window.open(waLink(b.client_phone, waConfirmationText(b)), '_blank');
+        }
+        function openWaReminder(b) {
+            if (!b) return showToast('Rendez-vous introuvable');
+            window.open(waLink(b.client_phone, waReminderText(b)), '_blank');
         }
 
         // Charge les fiches et synchronise automatiquement avec les réservations.

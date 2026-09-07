@@ -107,7 +107,8 @@ Rendez-vous sur `votre-site/admin.html` et connectez-vous :
 - **Statistiques** : aujourd'hui, en attente, à venir, total
 - **Filtres** : statut (attente/confirmé/terminé/annulé), période, recherche
 - **+ Nouveau rdv** : créer un rendez-vous manuellement (téléphone, marche)
-- **👁** voir le détail complet d'un rendez-vous
+- **💬** envoyer un **rappel WhatsApp** au client (message prérempli)
+- **👁** voir le détail complet d'un rendez-vous (avec boutons *Confirmer* et *Rappel* WhatsApp)
 - **👤** ouvrir la fiche cliente (historique + notes)
 - **✏️** modifier un rendez-vous
 - **✓** confirmer une demande (passe de « en attente » à « confirmé »)
