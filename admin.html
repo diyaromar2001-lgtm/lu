@@ -414,6 +414,42 @@
         .service-toggle.on { background: var(--color-success); border-color: var(--color-success); color: #fff; }
         .service-toggle.off { background: var(--color-cream); }
 
+        /* Fiches clientes */
+        .client-list { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
+        .client-card {
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+            background: var(--color-white); border-radius: 14px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.04); padding: 1rem 1.25rem;
+            cursor: pointer; border: 1px solid transparent; transition: border-color 0.2s;
+        }
+        .client-card:hover { border-color: var(--color-accent); }
+        .client-main { flex: 1; min-width: 180px; }
+        .client-name { font-weight: 600; }
+        .client-meta { font-size: 0.8rem; color: var(--color-text-light); }
+        .client-stats { text-align: right; font-size: 0.8rem; color: var(--color-text-light); }
+        .client-stats b { font-size: 1.05rem; color: var(--color-text); }
+        .client-last { font-size: 0.72rem; opacity: 0.85; }
+
+        .cli-stats-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0.25rem 0; }
+        .cli-stat {
+            flex: 1; min-width: 120px; background: var(--color-cream);
+            border-radius: 12px; padding: 0.75rem 1rem; text-align: center;
+        }
+        .cli-stat b { display: block; font-size: 0.95rem; }
+        .cli-stat span { font-size: 0.72rem; color: var(--color-text-light); }
+        .hist-list { max-height: 260px; overflow: auto; border: 1px solid rgba(0,0,0,0.06); border-radius: 12px; }
+        .hist-row {
+            display: flex; justify-content: space-between; gap: 0.5rem; align-items: center;
+            padding: 0.55rem 0.9rem; border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.85rem;
+        }
+        .hist-row:last-child { border-bottom: none; }
+        .hist-date { color: var(--color-text-light); white-space: nowrap; }
+        .hist-svc { text-align: right; }
+        .hist-svc .badge { margin-left: 0.4rem; }
+        .toolbar-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .toolbar-row .view-toggle { margin-bottom: 0; }
+
         /* Bandeau promo */
         .promo-row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
         .promo-row .cfg-field { flex: 1; min-width: 210px; }
@@ -468,6 +504,7 @@
         <div class="main">
             <div class="dashboard-tabs" id="dashboardTabs">
                 <button class="dash-tab active" onclick="showPanel('bookings')">Réservations</button>
+                <button class="dash-tab" onclick="showPanel('clients')">Clientes</button>
                 <button class="dash-tab" onclick="showPanel('prestations')">Prestations</button>
                 <button class="dash-tab" onclick="showPanel('gallery')">Galerie</button>
                 <button class="dash-tab" onclick="showPanel('content')">Contenu</button>
@@ -476,9 +513,12 @@
 
             <!-- ===== PANNEAU RÉSERVATIONS ===== -->
             <div class="panel active" id="panelBookings">
-            <div class="view-toggle">
-                <button class="view-btn active" id="viewBtnList" onclick="showView('list')">Tableau</button>
-                <button class="view-btn" id="viewBtnWeek" onclick="showView('week')">Semaine</button>
+            <div class="toolbar-row">
+                <div class="view-toggle">
+                    <button class="view-btn active" id="viewBtnList" onclick="showView('list')">Tableau</button>
+                    <button class="view-btn" id="viewBtnWeek" onclick="showView('week')">Semaine</button>
+                </div>
+                <button class="btn btn-primary btn-small" onclick="openNewBooking()" style="margin-left:auto;">+ Nouveau rdv</button>
             </div>
 
             <!-- Stats -->
@@ -542,6 +582,19 @@
                 </div>
                 <div class="gal-hint" style="margin-top:0.75rem;">Astuce : cliquez sur un créneau vide d'une colonne pour le bloquer (masqué aux clients).</div>
             </div>
+            </div>
+
+            <!-- ===== PANNEAU CLIENTES ===== -->
+            <div class="panel" id="panelClients">
+                <div class="gal-toolbar">
+                    <h3 style="font-family:var(--font-heading);font-weight:400;">Fiches clientes</h3>
+                    <button class="btn btn-primary" onclick="openNewClient()">+ Nouvelle cliente</button>
+                </div>
+                <div class="filters">
+                    <input class="filter-input" id="clientSearch" placeholder="Rechercher (nom, téléphone, email)..." oninput="renderClients()">
+                </div>
+                <div class="client-list" id="clientList"><div class="gal-empty">Chargement...</div></div>
+                <p class="gal-hint">Les fiches se créent automatiquement à partir des réservations. Cliquez sur une cliente pour voir son historique et noter sa formule (coloration, soin…).</p>
             </div>
 
             <!-- ===== PANNEAU PRESTATIONS ===== -->
@@ -679,7 +732,7 @@
     <!-- ===== MODAL MODIFICATION ===== -->
     <div class="modal-overlay" id="editModal">
         <div class="modal">
-            <h2>Modifier le rendez-vous</h2>
+            <h2 id="editModalTitle">Modifier le rendez-vous</h2>
             <div class="modal-grid">
                 <div class="form-group">
                     <label>Prestation</label>
@@ -727,6 +780,49 @@
                 <button class="btn btn-ghost" onclick="closeModal('editModal')">Annuler</button>
                 <button class="btn btn-danger" id="deleteBtn" onclick="removeBooking()">Supprimer</button>
                 <button class="btn btn-primary" onclick="saveEdit()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== MODAL FICHE CLIENTE ===== -->
+    <div class="modal-overlay" id="clientModal">
+        <div class="modal">
+            <h2 id="clientModalTitle">Fiche cliente</h2>
+            <div id="clientModalBody"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal('clientModal')">Fermer</button>
+                <button class="btn btn-primary" onclick="saveClient()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL NOUVELLE CLIENTE ===== -->
+    <div class="modal-overlay" id="newClientModal">
+        <div class="modal modal-sm">
+            <h2>Nouvelle cliente</h2>
+            <div class="modal-grid">
+                <div class="form-group full">
+                    <label>Nom</label>
+                    <input type="text" id="ncName" placeholder="Ex : Marie Dupont">
+                </div>
+                <div class="form-group full">
+                    <label>Téléphone</label>
+                    <input type="text" id="ncPhone" placeholder="Ex : 078 123 45 67">
+                </div>
+                <div class="form-group full">
+                    <label>Email (optionnel)</label>
+                    <input type="email" id="ncEmail" placeholder="marie@email.ch">
+                </div>
+                <div class="form-group full">
+                    <label>Notes (formule, couleurs…)</label>
+                    <textarea id="ncNotes" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal('newClientModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveNewClient()">Enregistrer</button>
             </div>
         </div>
     </div>
@@ -841,6 +937,8 @@
         let currentRow = null;
         let blockedSlotsCache = []; // [{date, time, note}]
         let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '', promo: {} };
+        let clientsCache = [];
+        let currentClient = null;
 
         // ===== AUTH =====
         let isSignUpMode = false;
@@ -909,6 +1007,7 @@
             loadSettingsAdmin();
             loadServicesAdmin();
             loadGalleryAdmin();
+            loadClients();
         }
 
         function onLoggedOut() {
@@ -1004,6 +1103,7 @@
                         <td>
                             <div class="row-actions">
                                 <button class="icon-btn" title="Voir détails" onclick="openDetails('${b.id}')">👁</button>
+                                <button class="icon-btn" title="Fiche cliente" data-phone="${escapeHtml(b.client_phone)}" onclick="openClientByPhone(this.dataset.phone)">👤</button>
                                 <button class="icon-btn" title="Modifier" onclick="openEditFromId('${b.id}')">✏️</button>
                                 ${b.status === 'pending' ? `<button class="icon-btn confirm" title="Confirmer" onclick="setStatus('${b.id}','confirmed')">✓</button>` : ''}
                                 ${b.status !== 'cancelled' ? `<button class="icon-btn cancel" title="Annuler" onclick="setStatus('${b.id}','cancelled')">✕</button>` : ''}
@@ -1155,9 +1255,44 @@
         // ===== EDIT =====
         function openEditFromId(id) { openEdit(findRow(id)); }
 
+        function openNewBooking() {
+            currentRow = null;
+            document.getElementById('editModalTitle').textContent = 'Nouveau rendez-vous';
+            document.getElementById('deleteBtn').style.display = 'none';
+            const prods = serviceOptions();
+            document.getElementById('editService').innerHTML = prods.map((s, i) =>
+                `<option value="${s.name}"${i === 0 ? ' selected' : ''}>${s.name}</option>`
+            ).join('');
+            document.getElementById('editService').onchange = () => {
+                const picked = serviceOptions().find(p => p.name === document.getElementById('editService').value);
+                document.getElementById('editPrice').value = picked ? picked.price : '';
+            };
+            document.getElementById('editPrice').value = prods[0] ? prods[0].price : '';
+            document.getElementById('editDate').value = '';
+            document.getElementById('editTime').value = '';
+            document.getElementById('editName').value = '';
+            document.getElementById('editPhone').value = '';
+            document.getElementById('editEmail').value = '';
+            document.getElementById('editNotes').value = '';
+            document.getElementById('editStatus').value = 'pending';
+            openModal('editModal');
+        }
+
+        function openNewBookingForCurrent() {
+            closeModal('clientModal');
+            openNewBooking();
+            if (currentClient) {
+                document.getElementById('editName').value = currentClient.name;
+                document.getElementById('editPhone').value = currentClient.phone;
+                document.getElementById('editEmail').value = currentClient.email || '';
+            }
+        }
+
         function openEdit(row) {
             if (!row) return;
             currentRow = row;
+            document.getElementById('editModalTitle').textContent = 'Modifier le rendez-vous';
+            document.getElementById('deleteBtn').style.display = 'inline-flex';
             const prods = serviceOptions();
             document.getElementById('editService').innerHTML = prods.map(s =>
                 `<option value="${s.name}" ${s.name === row.service_name ? 'selected' : ''}>${s.name}</option>`
@@ -1179,7 +1314,7 @@
         }
 
         async function saveEdit() {
-            const id = currentRow.id;
+            const isNew = !currentRow;
             const updates = {
                 service_name: document.getElementById('editService').value,
                 service_price: document.getElementById('editPrice').value,
@@ -1195,7 +1330,17 @@
                 showToast('Nom, téléphone, date et heure sont obligatoires');
                 return;
             }
-            const { error } = await db.from('bookings').update(updates).eq('id', id);
+            if (isNew) {
+                const { error } = await db.from('bookings').insert([updates]);
+                if (error) { showToast('Erreur : ' + error.message); return; }
+                closeModal('editModal');
+                showToast('Rendez-vous créé ✔');
+                loadBookings();
+                loadClients();
+                showView('list');
+                return;
+            }
+            const { error } = await db.from('bookings').update(updates).eq('id', currentRow.id);
             if (error) { showToast('Erreur : ' + error.message); return; }
             closeModal('editModal');
             showToast('Rendez-vous modifié ✔');
@@ -1210,6 +1355,7 @@
             if (error) { showToast('Erreur : ' + error.message); return; }
             showToast(status === 'cancelled' ? 'Rendez-vous annulé' : 'Rendez-vous confirmé ✔');
             loadBookings();
+            loadClients();
         }
 
         async function removeBooking() {
@@ -1219,6 +1365,220 @@
             closeModal('editModal');
             showToast('Rendez-vous supprimé');
             loadBookings();
+            loadClients();
+        }
+
+        // ===== FICHES CLIENTES =====
+        function normPhone(p) {
+            return String(p || '').replace(/\D/g, '');
+        }
+
+        // Charge les fiches et synchronise automatiquement avec les réservations.
+        // Pour chaque téléphone : crée la fiche si besoin et la lie à ses rdv.
+        let clientsLoading = false;
+        async function loadClients() {
+            if (clientsLoading) return;
+            clientsLoading = true;
+            const listEl = document.getElementById('clientList');
+            if (listEl) listEl.innerHTML = '<div class="gal-empty">Chargement...</div>';
+            try {
+                const [cRes, bRes] = await Promise.all([
+                    db.from('clients').select('*').order('name', { ascending: true }),
+                    db.from('bookings').select('id,date,time,client_name,client_phone,client_email,service_name,service_price,status')
+                ]);
+                if (cRes.error) throw cRes.error;
+                if (bRes.error) throw bRes.error;
+                let clients = cRes.data || [];
+                const bookings = bRes.data || [];
+                const changed = await mergeClients(clients, bookings);
+                if (changed) {
+                    const fresh = await db.from('clients').select('*').order('name', { ascending: true });
+                    if (fresh.error) throw fresh.error;
+                    clients = fresh.data || [];
+                }
+                clientsCache = clients;
+                renderClients();
+            } catch (e) {
+                if (listEl) listEl.innerHTML = '<div class="gal-empty">Erreur : ' + escapeHtml(String(e.message || e)) + '</div>';
+            } finally {
+                clientsLoading = false;
+            }
+        }
+
+        async function mergeClients(clients, bookings) {
+            const byPhone = new Map(clients.map(c => [normPhone(c.phone), c]));
+            // Statistiques (visites, dernière prestation) à partir des rdv non annulés
+            const stats = new Map();
+            for (const b of bookings) {
+                if (b.status === 'cancelled') continue;
+                const p = normPhone(b.client_phone);
+                if (!p) continue;
+                const s = stats.get(p) || { count: 0, key: '' };
+                s.count++;
+                const k = b.date + ' ' + b.time;
+                if (k > s.key) { s.key = k; s.last_service = b.service_name; s.last_date = b.date; }
+                stats.set(p, s);
+            }
+            let changed = false;
+            // Crée les fiches manquantes et lie chaque rdv à sa fiche
+            for (const b of bookings) {
+                if (b.status === 'cancelled') continue;
+                const p = normPhone(b.client_phone);
+                if (!p) continue;
+                let c = byPhone.get(p);
+                if (!c) {
+                    const ins = await db.from('clients').insert({
+                        name: b.client_name || '—', phone: b.client_phone, email: b.client_email || null
+                    }).select().single();
+                    if (ins.error) { console.error('mergeClients insert', ins.error); continue; }
+                    c = ins.data;
+                    byPhone.set(p, c);
+                    clients.push(c);
+                    changed = true;
+                } else if (!c.email && b.client_email) {
+                    c.email = b.client_email;
+                }
+                if (b.client_id !== c.id) {
+                    if (b.id) await db.from('bookings').update({ client_id: c.id }).eq('id', b.id);
+                    b.client_id = c.id;
+                }
+            }
+            // Met à jour le compteur de visites et la dernière prestation
+            for (const c of clients) {
+                const s = stats.get(normPhone(c.phone));
+                const want = {
+                    count: s ? s.count : 0,
+                    service: s ? (s.last_service || null) : null,
+                    date: s ? (s.last_date || null) : null
+                };
+                if ((c.visit_count || 0) !== want.count ||
+                    (c.last_service || null) !== want.service ||
+                    (c.last_date || null) !== want.date) {
+                    c.visit_count = want.count;
+                    c.last_service = want.service;
+                    c.last_date = want.date;
+                    const up = await db.from('clients').update({
+                        visit_count: c.visit_count, last_service: c.last_service, last_date: c.last_date
+                    }).eq('id', c.id);
+                    if (up.error) console.error('mergeClients update', up.error);
+                    changed = true;
+                }
+            }
+            return changed;
+        }
+
+        function renderClients() {
+            const listEl = document.getElementById('clientList');
+            if (!listEl) return;
+            const q = (document.getElementById('clientSearch')?.value || '').toLowerCase().trim();
+            const list = clientsCache.filter(c => {
+                if (!q) return true;
+                return `${c.name} ${c.phone} ${c.email || ''}`.toLowerCase().includes(q);
+            });
+            if (!list.length) {
+                listEl.innerHTML = '<div class="gal-empty">Aucune cliente pour ces critères.</div>';
+                return;
+            }
+            listEl.innerHTML = list.map(c => `
+                <div class="client-card" onclick="openClient('${c.id}')">
+                    <div class="client-main">
+                        <div class="client-name">${escapeHtml(c.name)}</div>
+                        <div class="client-meta">${escapeHtml(c.phone)}${c.email ? ' · ' + escapeHtml(c.email) : ''}</div>
+                    </div>
+                    <div class="client-stats">
+                        <b>${c.visit_count || 0}</b> visites
+                        ${c.last_service ? `<div class="client-last">${escapeHtml(c.last_service)} — ${formatDate(c.last_date)}</div>` : '<div class="client-last">Aucune visite enregistrée</div>'}
+                    </div>
+                </div>`).join('');
+        }
+
+        function openClientByPhone(phone) {
+            const c = clientsCache.find(x => normPhone(x.phone) === normPhone(phone));
+            if (c) openClient(c.id);
+            else showToast('Aucune fiche pour ce numéro');
+        }
+
+        function openClient(id) {
+            const c = clientsCache.find(x => x.id === id);
+            if (!c) return;
+            currentClient = c;
+            const hist = allBookings
+                .filter(b => normPhone(b.client_phone) === normPhone(c.phone) && b.status !== 'cancelled')
+                .sort((a, b) => ((a.date + a.time) < (b.date + b.time)) ? 1 : -1);
+            const histHtml = hist.length ? hist.map(b => `
+                <div class="hist-row">
+                    <div class="hist-date">${formatDate(b.date)} ${b.time}</div>
+                    <div class="hist-svc">${escapeHtml(b.service_name)} <span class="badge ${b.status}">${STATUS_LABELS[b.status] || b.status}</span></div>
+                </div>`).join('')
+                : '<div class="gal-empty" style="padding:1.5rem;">Aucun rendez-vous enregistré pour cette cliente.</div>';
+            document.getElementById('clientModalTitle').textContent = 'Fiche cliente';
+            document.getElementById('clientModalBody').innerHTML = `
+                <div class="modal-grid">
+                    <div class="form-group"><label>Nom</label><input id="cliName" type="text" value="${escapeHtml(c.name)}"></div>
+                    <div class="form-group"><label>Téléphone</label><input id="cliPhone" type="text" value="${escapeHtml(c.phone)}"></div>
+                    <div class="form-group full"><label>Email</label><input id="cliEmail" type="email" value="${escapeHtml(c.email || '')}"></div>
+                    <div class="form-group full"><label>Notes salon (formule, couleur, soin…)</label><textarea id="cliNotes" rows="3">${escapeHtml(c.notes || '')}</textarea></div>
+                </div>
+                <div class="cli-stats-row">
+                    <div class="cli-stat"><b>${c.visit_count || 0}</b><span>visites</span></div>
+                    <div class="cli-stat"><b>${escapeHtml(c.last_service || '—')}</b><span>dernière prestation</span></div>
+                    <div class="cli-stat"><b>${c.last_date ? formatDate(c.last_date) : '—'}</b><span>dernière visite</span></div>
+                </div>
+                <h4 style="margin:1.2rem 0 0.6rem;font-family:var(--font-heading);font-weight:400;">Historique des rendez-vous</h4>
+                <div class="hist-list">${histHtml}</div>
+                <div class="modal-actions" style="margin-top:1rem;justify-content:flex-start;">
+                    <a class="btn btn-ghost" href="tel:${escapeHtml(c.phone)}">📞 Appeler</a>
+                    <a class="btn btn-ghost" href="https://wa.me/${normPhone(c.phone)}" target="_blank">WhatsApp</a>
+                    <button class="btn btn-ghost" onclick="openNewBookingForCurrent()">+ Prendre un rdv</button>
+                </div>`;
+            openModal('clientModal');
+        }
+
+        async function saveClient() {
+            if (!currentClient) return;
+            const phone = document.getElementById('cliPhone').value.trim();
+            if (!phone) { showToast('Téléphone obligatoire'); return; }
+            const dup = clientsCache.find(x => x.id !== currentClient.id && normPhone(x.phone) === normPhone(phone));
+            if (dup) { showToast('Une cliente existe déjà avec ce numéro'); return; }
+            const updates = {
+                name: document.getElementById('cliName').value.trim(),
+                phone,
+                email: document.getElementById('cliEmail').value.trim() || null,
+                notes: document.getElementById('cliNotes').value.trim() || ''
+            };
+            if (!updates.name) { showToast('Nom obligatoire'); return; }
+            const { error } = await db.from('clients').update(updates).eq('id', currentClient.id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            closeModal('clientModal');
+            showToast('Fiche enregistrée ✔');
+            loadClients();
+        }
+
+        function openNewClient() {
+            document.getElementById('ncName').value = '';
+            document.getElementById('ncPhone').value = '';
+            document.getElementById('ncEmail').value = '';
+            document.getElementById('ncNotes').value = '';
+            openModal('newClientModal');
+        }
+
+        async function saveNewClient() {
+            const name = document.getElementById('ncName').value.trim();
+            const phone = document.getElementById('ncPhone').value.trim();
+            if (!name || !phone) { showToast('Nom et téléphone obligatoires'); return; }
+            if (clientsCache.some(x => normPhone(x.phone) === normPhone(phone))) {
+                showToast('Une cliente existe déjà avec ce numéro');
+                return;
+            }
+            const { error } = await db.from('clients').insert({
+                name, phone,
+                email: document.getElementById('ncEmail').value.trim() || null,
+                notes: document.getElementById('ncNotes').value.trim() || ''
+            });
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            closeModal('newClientModal');
+            showToast('Cliente ajoutée ✔');
+            loadClients();
         }
 
         // ===== VUE CALENDRIER SEMAINE =====
@@ -1469,10 +1829,11 @@
             document.querySelectorAll('#dashboardTabs .dash-tab').forEach(t => {
                 t.classList.toggle('active', t.getAttribute('onclick').indexOf(name) !== -1);
             });
-            ['bookings', 'prestations', 'gallery', 'content', 'hours'].forEach(p => {
+            ['bookings', 'clients', 'prestations', 'gallery', 'content', 'hours'].forEach(p => {
                 const el = document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1));
                 if (el) el.classList.toggle('active', p === name);
             });
+            if (name === 'clients') renderClients();
         }
 
         // ===== RÉGLAGES (lecture) =====

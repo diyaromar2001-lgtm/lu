@@ -304,3 +304,59 @@ insert into public.services (id, name, cat, price, duration, sort_order) values
 ('brushing', 'Brushing', 'Coupe & Brushing', 'À partir de 49 CHF', 45, 8),
 ('cut-go', 'Cut and Go', 'Coupe & Brushing', '20 CHF', 20, 9)
 on conflict (id) do nothing;
+
+-- ------------------------------------------------------------
+-- 11. Fiches clientes (historique & suivi)
+-- ------------------------------------------------------------
+-- Chaque réservation est rattachée à une fiche (créée automatiquement
+-- par numéro de téléphone). Vous pouvez noter la formule de chaque
+-- cliente (coloration, soin...) et voir son historique.
+create table if not exists public.clients (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  phone text not null unique,
+  email text,
+  notes text default '',
+  visit_count int not null default 0,
+  last_service text,
+  last_date date,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Lien vers la fiche cliente sur les réservations existantes
+alter table public.bookings add column if not exists client_id uuid references public.clients(id) on delete set null;
+
+-- Remplit les fiches à partir des réservations déjà enregistrées
+insert into public.clients (name, phone, email, visit_count, last_service, last_date)
+select
+  (array_agg(b.client_name order by b.date desc, b.time desc))[1] as name,
+  b.client_phone as phone,
+  (array_agg(b.client_email order by b.date desc, b.time desc) filter (where b.client_email is not null))[1] as email,
+  count(*) as visit_count,
+  (array_agg(b.service_name order by b.date desc, b.time desc))[1] as last_service,
+  (array_agg(b.date order by b.date desc, b.time desc))[1] as last_date
+from public.bookings b
+where b.status <> 'cancelled'
+group by b.client_phone
+on conflict (phone) do nothing;
+
+-- Lie les réservations existantes à leur fiche cliente
+update public.bookings b
+set client_id = c.id
+from public.clients c
+where b.client_phone = c.phone and b.client_id is null;
+
+alter table public.clients enable row level security;
+
+-- Seul l'administrateur (connecté) voit et modifie les fiches clientes
+drop policy if exists "clients auth select" on public.clients;
+create policy "clients auth select" on public.clients for select using (auth.role() = 'authenticated');
+drop policy if exists "clients auth insert" on public.clients;
+create policy "clients auth insert" on public.clients for insert with check (auth.role() = 'authenticated');
+drop policy if exists "clients auth update" on public.clients;
+create policy "clients auth update" on public.clients for update using (auth.role() = 'authenticated');
+drop policy if exists "clients auth delete" on public.clients;
+create policy "clients auth delete" on public.clients for delete using (auth.role() = 'authenticated');
+
+grant select, insert, update, delete on public.clients to authenticated;

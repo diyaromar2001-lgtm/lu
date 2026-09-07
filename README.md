@@ -106,11 +106,20 @@ Rendez-vous sur `votre-site/admin.html` et connectez-vous :
 
 - **Statistiques** : aujourd'hui, en attente, à venir, total
 - **Filtres** : statut (attente/confirmé/terminé/annulé), période, recherche
+- **+ Nouveau rdv** : créer un rendez-vous manuellement (téléphone, marche)
 - **👁** voir le détail complet d'un rendez-vous
+- **👤** ouvrir la fiche cliente (historique + notes)
 - **✏️** modifier un rendez-vous
 - **✓** confirmer une demande (passe de « en attente » à « confirmé »)
 - **✕** annuler un rendez-vous → le créneau redevient **libre** pour les clients
 - **🗑** supprimer définitivement
+
+Onglet **Clientes** :
+- Fiches créées automatiquement à partir des réservations (par téléphone)
+- Cliquez sur une cliente → historique de ses rendez-vous, dernière prestation,
+  boutons Appeler / WhatsApp / prendre un rdv
+- Noter la **formule** de chaque cliente (coloration, soin, couleurs…)
+- Ajouter une cliente manuellement
 
 > Sécurité : seul l'email inscrit dans la table `admins` peut voir et gérer
 > les rendez-vous. Les visiteurs du site ne voient que les créneaux occupés
@@ -136,7 +145,7 @@ Puis ouvrez http://localhost:8080
 | Fichier          | Rôle                                              |
 |------------------|---------------------------------------------------|
 | `index.html`     | Site public (design, galerie, réservation)      |
-| `admin.html`     | Espace admin sécurisé (réservations, galerie, contenu, horaires) |
+| `admin.html`     | Espace admin sécurisé (réservations, clientes, prestations, galerie, contenu, horaires) |
 | `config.js`      | Clés Supabase + numéro WhatsApp                   |
 | `database.sql`   | Script SQL à exécuter dans Supabase (une fois)    |
 
