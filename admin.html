@@ -450,6 +450,21 @@
         .toolbar-row { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
         .toolbar-row .view-toggle { margin-bottom: 0; }
 
+        /* Créneaux bloqués */
+        .blocked-panel {
+            margin-top: 1.5rem; background: var(--color-bg);
+            border: 1px solid rgba(0,0,0,0.05); border-radius: 14px; padding: 1rem 1.25rem;
+        }
+        .blocked-panel h3 { font-family: var(--font-heading); font-weight: 400; margin-bottom: 0.75rem; }
+        .blocked-list { display: grid; gap: 0.4rem; max-height: 220px; overflow: auto; }
+        .blocked-row {
+            display: flex; align-items: center; gap: 0.75rem;
+            background: var(--color-white); border-radius: 10px; padding: 0.4rem 0.8rem;
+            font-size: 0.85rem;
+        }
+        .blocked-dt { font-weight: 600; white-space: nowrap; }
+        .blocked-note { flex: 1; color: var(--color-text-light); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
         /* Bandeau promo */
         .promo-row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
         .promo-row .cfg-field { flex: 1; min-width: 210px; }
@@ -519,6 +534,7 @@
                     <button class="view-btn" id="viewBtnWeek" onclick="showView('week')">Semaine</button>
                 </div>
                 <button class="btn btn-primary btn-small" onclick="openNewBooking()" style="margin-left:auto;">+ Nouveau rdv</button>
+                <button class="btn btn-ghost btn-small" onclick="openBlockRange()" title="Bloquer un horaire (pause…)">⏸ Bloquer un horaire</button>
             </div>
 
             <!-- Stats -->
@@ -565,6 +581,12 @@
                 </table>
             </div>
             <div class="loading" id="loadingMsg">Chargement des réservations...</div>
+
+            <!-- Créneaux bloqués (pause, déplacement…) -->
+            <div class="blocked-panel" id="blockedPanel" style="display:none;">
+                <h3>Creneaux bloqués</h3>
+                <div class="blocked-list" id="blockedList"></div>
+            </div>
 
             <!-- Calendrier semaine -->
             <div class="week-view" id="weekView">
@@ -883,6 +905,36 @@
             <div class="modal-actions">
                 <button class="btn btn-ghost" onclick="closeModal('blockModal')">Annuler</button>
                 <button class="btn btn-primary" onclick="confirmBlock()">Bloquer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL BLOQUER UN HORAIRE (plage) ===== -->
+    <div class="modal-overlay" id="blockRangeModal">
+        <div class="modal modal-sm">
+            <h2>Bloquer un horaire</h2>
+            <div class="modal-grid">
+                <div class="form-group full">
+                    <label>Date</label>
+                    <input type="date" id="brDate">
+                </div>
+                <div class="form-group">
+                    <label>Début</label>
+                    <input type="time" id="brStart">
+                </div>
+                <div class="form-group">
+                    <label>Fin</label>
+                    <input type="time" id="brEnd">
+                </div>
+                <div class="form-group full">
+                    <label>Motif / note (optionnel)</label>
+                    <input type="text" id="brNote" maxlength="100" placeholder="Ex : Pause déjeuner, déplacement…">
+                </div>
+            </div>
+            <p class="gal-hint">Bloque chaque créneau de 30&nbsp;min entre le début et la fin. Ces horaires seront masqués aux clients du site.</p>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal('blockRangeModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="confirmRangeBlock()">Bloquer</button>
             </div>
         </div>
     </div>
@@ -1809,7 +1861,7 @@
         // ===== MODALS & TOAST =====
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-        ['detailsModal', 'editModal', 'blockModal', 'serviceModal'].forEach(id =>
+        ['detailsModal', 'editModal', 'blockModal', 'blockRangeModal', 'serviceModal', 'clientModal', 'newClientModal'].forEach(id =>
             document.getElementById(id).addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
             })
@@ -2121,9 +2173,65 @@
         async function loadBlockedSlots() {
             const { data, error } = await db
                 .from('blocked_slots')
-                .select('id, date, time, note');
+                .select('id, date, time, note')
+                .order('date', { ascending: true })
+                .order('time', { ascending: true });
             if (error) { console.error('loadBlockedSlots', error); return; }
             blockedSlotsCache = data || [];
+            renderBlockedList();
+        }
+
+        // Liste des créneaux bloqués (sous le tableau des réservations)
+        function renderBlockedList() {
+            const wrap = document.getElementById('blockedPanel');
+            if (!wrap) return;
+            if (!blockedSlotsCache.length) { wrap.style.display = 'none'; return; }
+            wrap.style.display = 'block';
+            document.getElementById('blockedList').innerHTML = blockedSlotsCache.slice(0, 50).map(b => `
+                <div class="blocked-row">
+                    <span class="blocked-dt">${formatDate(b.date)} ${b.time}</span>
+                    <span class="blocked-note">${escapeHtml(b.note || '')}</span>
+                    <button class="icon-btn delete" title="Débloquer ce créneau" onclick="unblockSlot('${b.id}')">🗑</button>
+                </div>`).join('');
+        }
+
+        // Bloque une plage horaire (ex : pause déjeuner) par pas de 30 min
+        function openBlockRange() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('brDate').value = today;
+            document.getElementById('brStart').value = '12:00';
+            document.getElementById('brEnd').value = '13:00';
+            document.getElementById('brNote').value = '';
+            openModal('blockRangeModal');
+        }
+
+        async function confirmRangeBlock() {
+            const date = document.getElementById('brDate').value;
+            const start = document.getElementById('brStart').value;
+            const end = document.getElementById('brEnd').value;
+            const note = document.getElementById('brNote').value.trim();
+            if (!date || !start || !end) { showToast('Date, début et fin sont obligatoires'); return; }
+            if (end <= start) { showToast('La fin doit être après le début'); return; }
+            if (date < new Date().toISOString().split('T')[0]) { showToast('Impossible de bloquer une date passée'); return; }
+            // Cadre sur la grille de 30 min
+            const sMin = Math.ceil((+start.split(':')[0] * 60 + +start.split(':')[1]) / 30) * 30;
+            const eMin = Math.floor((+end.split(':')[0] * 60 + +end.split(':')[1]) / 30) * 30;
+            const slots = [];
+            for (let m = sMin; m < eMin; m += 30) {
+                slots.push(`${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`);
+            }
+            if (!slots.length) { showToast('Intervalle trop court (30 min minimum)'); return; }
+            const rows = slots.map(time => ({ date, time, note: note || '' }));
+            const { error } = await db.from('blocked_slots').insert(rows);
+            if (error) {
+                if (error.code === '23505') showToast('Un de ces créneaux est déjà bloqué');
+                else showToast('Erreur : ' + error.message);
+                return;
+            }
+            closeModal('blockRangeModal');
+            showToast(`${slots.length} créneau(x) bloqué(s) ✔`);
+            loadBlockedSlots();
+            if (document.getElementById('weekView').style.display === 'block') renderWeekCalendar();
         }
 
         async function unblockSlot(id) {
