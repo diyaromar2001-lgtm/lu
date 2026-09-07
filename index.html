@@ -87,13 +87,14 @@
         }
 
         /* ===== BANNIÈRE PROMO ===== */
+        .promo-bar { height: 38px; display: flex; align-items: center; justify-content: center; }
         .promo-bar {
             position: relative; z-index: 2000;
             background: var(--color-accent);
             color: #fff; text-align: center;
-            padding: 0.7rem 3rem; font-size: 0.88rem; font-weight: 500;
+            padding: 0 3rem; font-size: 0.88rem; font-weight: 500;
         }
-        .promo-bar a { color: #fff; text-decoration: none; display: inline-block; }
+        .promo-bar a { color: #fff; text-decoration: none; display: inline-block; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .promo-bar a:hover { text-decoration: underline; }
         .promo-close {
             position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%);
@@ -101,7 +102,7 @@
             cursor: pointer; opacity: 0.8; padding: 0.2rem;
         }
         .promo-close:hover { opacity: 1; }
-        body.has-promo nav { top: var(--promo-h, 38px); }
+        body.has-promo nav { top: 38px; }
 
         /* ===== NAVIGATION ===== */
         nav {
@@ -1043,19 +1044,18 @@
             renderCalendar();
         }
 
-        // --- Bannière promo ---
+// --- Bannière promo ---
         const p = cfg.promo || {};
         const promoBar = document.getElementById('promoBar');
         if (promoBar) {
             const text = (p.text || '').trim();
             const show = p.enabled && text;
-            promoBar.style.display = show ? 'block' : 'none';
+            promoBar.style.display = show ? 'flex' : 'none';
             document.body.classList.toggle('has-promo', !!show);
             if (show) {
-                document.documentElement.style.setProperty('--promo-h', promoBar.offsetHeight + 'px');
                 const link = document.getElementById('promoLink');
                 if (p.link) { link.href = p.link; link.innerHTML = text; link.style.display = 'inline-block'; }
-                else { link.removeAttribute('href'); link.textContent = text; }
+                else { link.removeAttribute('href'); link.textContent = text; link.style.display = 'inline-block'; }
                 if (p.color) promoBar.style.background = p.color;
                 if (p.text_color) { promoBar.style.color = p.text_color; link.style.color = p.text_color; }
                 if (!p.color) promoBar.style.background = 'var(--color-accent)';
