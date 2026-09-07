@@ -3,8 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PreTalli Coiffure | Salon de coiffure à Courroux</title>
-    <meta name="description" content="PreTalli Coiffure - Salon de coiffure privé à Courroux. Balayage, coloration, coupe et brushing. Sur rendez-vous.">
+    <title>PreTalli Coiffure | Salon de coiffure à Courroux (Jura, Suisse)</title>
+    <meta name="description" content="Salon de coiffure privé PreTalli Coiffure à Courroux (Jura, Suisse). Balayage, coloration, coupe et brushing sur rendez-vous. Réservez en ligne.">
+    <meta name="keywords" content="coiffure Courroux, salon de coiffure Jura, balayage Courroux, coloration ballayage Suisse, PreTalli Coiffure">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#1a1512">
+    <link rel="canonical" href="https://lu-beta.vercel.app/">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="fr_CH">
+    <meta property="og:site_name" content="PreTalli Coiffure">
+    <meta property="og:title" content="PreTalli Coiffure | Salon de coiffure à Courroux">
+    <meta property="og:description" content="Salon de coiffure privé à Courroux (Jura, Suisse). Balayage, coloration, coupe et brushing, sur rendez-vous. Réservez en ligne.">
+    <meta property="og:url" content="https://lu-beta.vercel.app/">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="PreTalli Coiffure | Salon de coiffure à Courroux">
+    <meta name="twitter:description" content="Salon de coiffure privé à Courroux (Jura, Suisse). Balayage, coloration, coupe et brushing, sur rendez-vous.">
+    <meta name="twitter:image" content="https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80">
+
+    <!-- Données structurées local business -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "HairSalon",
+        "name": "PreTalli Coiffure",
+        "description": "Salon de coiffure privé à Courroux. Balayage, coloration, coupe et brushing, sur rendez-vous.",
+        "image": "https://images.unsplash.com/photo-1560066984-138dadb4c035?w=1200&q=80",
+        "url": "https://lu-beta.vercel.app/",
+        "telephone": "+41796935978",
+        "priceRange": "20 - 220 CHF",
+        "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Rue du 23 Juin 15",
+            "postalCode": "2822",
+            "addressLocality": "Courroux",
+            "addressRegion": "Jura",
+            "addressCountry": "CH"
+        },
+        "geo": { "@type": "GeoCoordinates", "latitude": 47.4, "longitude": 7.2333 },
+        "openingHoursSpecification": [
+            { "@type": "OpeningHoursSpecification", "dayOfWeek": ["Tuesday", "Wednesday", "Thursday", "Friday"], "opens": "09:00", "closes": "19:00" },
+            { "@type": "OpeningHoursSpecification", "dayOfWeek": "Saturday", "opens": "08:00", "closes": "14:00" }
+        ],
+        "sameAs": ["https://www.facebook.com/p/Pretalli-Coiffure-100044976343542/"]
+    }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -38,6 +85,23 @@
             line-height: 1.6;
             overflow-x: hidden;
         }
+
+        /* ===== BANNIÈRE PROMO ===== */
+        .promo-bar {
+            position: relative; z-index: 2000;
+            background: var(--color-accent);
+            color: #fff; text-align: center;
+            padding: 0.7rem 3rem; font-size: 0.88rem; font-weight: 500;
+        }
+        .promo-bar a { color: #fff; text-decoration: none; display: inline-block; }
+        .promo-bar a:hover { text-decoration: underline; }
+        .promo-close {
+            position: absolute; right: 0.8rem; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: inherit; font-size: 0.9rem;
+            cursor: pointer; opacity: 0.8; padding: 0.2rem;
+        }
+        .promo-close:hover { opacity: 1; }
+        body.has-promo nav { top: var(--promo-h, 38px); }
 
         /* ===== NAVIGATION ===== */
         nav {
@@ -477,6 +541,12 @@
 </head>
 <body>
 
+    <!-- Bannière promo (affichée si activée dans l'admin) -->
+    <div class="promo-bar" id="promoBar" style="display:none;">
+        <a id="promoLink" href="#" target="_blank" rel="noopener"></a>
+        <button class="promo-close" id="promoClose" title="Fermer">✕</button>
+    </div>
+
     <!-- Navigation -->
     <nav id="navbar">
         <a href="#" class="nav-logo">PreTalli</a>
@@ -771,18 +841,37 @@
     </a>
 
     <script>
-    // ===== DATA =====
-    const SERVICES = [
+// ===== DATA =====
+    // Prestations par défaut (utilisées si la table services n'est pas encore en ligne)
+    const DEFAULT_SERVICES = [
         { id: 'balayage', name: 'Forfait Balayage', cat: 'Balayage', price: '220 CHF', duration: 180 },
         { id: 'refresh', name: 'Forfait Refresh Balayage', cat: 'Balayage', price: '170 CHF', duration: 150 },
         { id: 'patine', name: 'Forfait Patine', cat: 'Balayage', price: '118 CHF', duration: 120 },
-        { id: 'mèche-court', name: 'Forfait Mèche cheveux court', cat: 'Balayage', price: '105 CHF', duration: 90 },
+        { id: 'meche-court', name: 'Forfait Mèche cheveux court', cat: 'Balayage', price: '105 CHF', duration: 90 },
         { id: 'racine', name: 'Coloration Racine', cat: 'Coloration', price: '48 CHF', duration: 90 },
         { id: 'color-total', name: 'Coloration totale', cat: 'Coloration', price: '58 CHF', duration: 120 },
         { id: 'coupe-brushing', name: 'Coupe & Brushing', cat: 'Coupe & Brushing', price: 'À partir de 55 CHF', duration: 60 },
         { id: 'brushing', name: 'Brushing', cat: 'Coupe & Brushing', price: 'À partir de 49 CHF', duration: 45 },
         { id: 'cut-go', name: 'Cut and Go', cat: 'Coupe & Brushing', price: '20 CHF', duration: 20 },
     ];
+    let SERVICES = DEFAULT_SERVICES;
+    let SERVICES_LOADED = false;
+
+    // Charge les prestations depuis la table "services" (à défaut, les valeurs par défaut)
+    async function loadServices() {
+        if (!db) return;
+        const { data, error } = await db
+            .from('services')
+            .select('id, name, cat, price, duration, sort_order, active')
+            .eq('active', true)
+            .order('sort_order', { ascending: true });
+        if (error) { console.error('loadServices error', error); return; }
+        if (data && data.length > 0) {
+            SERVICES = data.map(s => ({ id: s.id, name: s.name, cat: s.cat, price: s.price, duration: s.duration }));
+        }
+        SERVICES_LOADED = true;
+        renderServices();
+    }
 
     // Opening hours: 0=Sun, 1=Mon, ... 6=Sat — stockées en minutes depuis minuit
     // (les réglages du site peuvent les remplacer au chargement)
@@ -953,6 +1042,26 @@
             }
             renderCalendar();
         }
+
+        // --- Bannière promo ---
+        const p = cfg.promo || {};
+        const promoBar = document.getElementById('promoBar');
+        if (promoBar) {
+            const text = (p.text || '').trim();
+            const show = p.enabled && text;
+            promoBar.style.display = show ? 'block' : 'none';
+            document.body.classList.toggle('has-promo', !!show);
+            if (show) {
+                document.documentElement.style.setProperty('--promo-h', promoBar.offsetHeight + 'px');
+                const link = document.getElementById('promoLink');
+                if (p.link) { link.href = p.link; link.innerHTML = text; link.style.display = 'inline-block'; }
+                else { link.removeAttribute('href'); link.textContent = text; }
+                if (p.color) promoBar.style.background = p.color;
+                if (p.text_color) { promoBar.style.color = p.text_color; link.style.color = p.text_color; }
+                if (!p.color) promoBar.style.background = 'var(--color-accent)';
+                if (!p.text_color) { promoBar.style.color = '#fff'; link.style.color = '#fff'; }
+            }
+        }
     }
 
     // ===== GALERIE =====
@@ -1066,8 +1175,23 @@
         setupFormValidation();
         loadBookedSlots();
         loadSiteSettings();
+        loadServices();
         loadGallery();
+        setupPromoClose();
     });
+
+    // ===== BANNIÈRE PROMO (fermeture) =====
+    function setupPromoClose() {
+        const btn = document.getElementById('promoClose');
+        if (!btn) return;
+        btn.addEventListener('click', () => {
+            const bar = document.getElementById('promoBar');
+            bar.style.display = 'none';
+            document.body.classList.remove('has-promo');
+            const nav = document.getElementById('navbar');
+            if (nav) nav.style.top = '';
+        });
+    }
 
     // ===== NAVIGATION =====
     function setupNav() {

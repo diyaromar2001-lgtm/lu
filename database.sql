@@ -252,6 +252,55 @@ insert into public.settings (key, value) values
     "4": ["09:00", "19:00"],
     "5": ["09:00", "19:00"],
     "6": ["08:00", "14:00"]
+  },
+  "promo": {
+    "enabled": false,
+    "text": "",
+    "link": "",
+    "color": "",
+    "text_color": ""
   }
 }'::jsonb)
 on conflict (key) do nothing;
+
+-- ------------------------------------------------------------
+-- 10. Prestations & prix (gérés depuis l'admin)
+-- ------------------------------------------------------------
+create table if not exists public.services (
+  id text primary key,
+  name text not null,
+  cat text not null,
+  price text not null,
+  duration int not null,
+  sort_order int default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+alter table public.services enable row level security;
+
+-- Tout le monde lit les prestations, un connecté les modifie
+drop policy if exists "services public read" on public.services;
+create policy "services public read" on public.services for select using (true);
+drop policy if exists "services auth insert" on public.services;
+create policy "services auth insert" on public.services for insert with check (auth.role() = 'authenticated');
+drop policy if exists "services auth update" on public.services;
+create policy "services auth update" on public.services for update using (auth.role() = 'authenticated');
+drop policy if exists "services auth delete" on public.services;
+create policy "services auth delete" on public.services for delete using (auth.role() = 'authenticated');
+
+grant select on public.services to anon, authenticated;
+grant select, insert, update, delete on public.services to authenticated;
+
+-- Prestations par défaut (modifiables ensuite depuis l'admin)
+insert into public.services (id, name, cat, price, duration, sort_order) values
+('balayage', 'Forfait Balayage', 'Balayage', '220 CHF', 180, 1),
+('refresh', 'Forfait Refresh Balayage', 'Balayage', '170 CHF', 150, 2),
+('patine', 'Forfait Patine', 'Balayage', '118 CHF', 120, 3),
+('meche-court', 'Forfait Mèche cheveux court', 'Balayage', '105 CHF', 90, 4),
+('racine', 'Coloration Racine', 'Coloration', '48 CHF', 90, 5),
+('color-total', 'Coloration totale', 'Coloration', '58 CHF', 120, 6),
+('coupe-brushing', 'Coupe & Brushing', 'Coupe & Brushing', 'À partir de 55 CHF', 60, 7),
+('brushing', 'Brushing', 'Coupe & Brushing', 'À partir de 49 CHF', 45, 8),
+('cut-go', 'Cut and Go', 'Coupe & Brushing', '20 CHF', 20, 9)
+on conflict (id) do nothing;

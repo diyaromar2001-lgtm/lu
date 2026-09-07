@@ -396,6 +396,28 @@
 
         .modal.modal-sm { max-width: 420px; }
 
+        /* Liste des prestations */
+        .service-list { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
+        .service-card {
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+            background: var(--color-white); border-radius: 14px;
+            box-shadow: 0 2px 14px rgba(0,0,0,0.04); padding: 1rem 1.25rem;
+        }
+        .service-card.inactive { opacity: 0.55; }
+        .service-main { flex: 1; min-width: 200px; }
+        .service-name { font-weight: 600; }
+        .service-cat { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--color-text-light); }
+        .service-dims { text-align: right; font-size: 0.82rem; color: var(--color-text-light); white-space: nowrap; }
+        .service-dims b { color: var(--color-text); }
+        .service-actions { display: flex; gap: 0.4rem; }
+        .service-toggle { padding: 0.3rem 0.8rem; border-radius: 50px; border: 1px solid rgba(0,0,0,0.12); background: var(--color-white); font-size: 0.72rem; font-weight: 600; cursor: pointer; color: var(--color-text-light); }
+        .service-toggle.on { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+        .service-toggle.off { background: var(--color-cream); }
+
+        /* Bandeau promo */
+        .promo-row { display: flex; gap: 0.9rem; flex-wrap: wrap; }
+        .promo-row .cfg-field { flex: 1; min-width: 210px; }
+
         @media (max-width: 768px) {
             .stats { grid-template-columns: repeat(2, 1fr); }
             .modal-grid { grid-template-columns: 1fr; }
@@ -446,6 +468,7 @@
         <div class="main">
             <div class="dashboard-tabs" id="dashboardTabs">
                 <button class="dash-tab active" onclick="showPanel('bookings')">Réservations</button>
+                <button class="dash-tab" onclick="showPanel('prestations')">Prestations</button>
                 <button class="dash-tab" onclick="showPanel('gallery')">Galerie</button>
                 <button class="dash-tab" onclick="showPanel('content')">Contenu</button>
                 <button class="dash-tab" onclick="showPanel('hours')">Horaires</button>
@@ -521,6 +544,16 @@
             </div>
             </div>
 
+            <!-- ===== PANNEAU PRESTATIONS ===== -->
+            <div class="panel" id="panelPrestations">
+                <div class="gal-toolbar">
+                    <h3 style="font-family:var(--font-heading);font-weight:400;">Prestations & prix</h3>
+                    <button class="btn btn-primary" onclick="openServiceEditor()">+ Nouvelle prestation</button>
+                </div>
+                <div class="service-list" id="serviceList"></div>
+                <p class="gal-hint">La liste du site public est mise à jour dès l'enregistrement. Les prestations désactivées n'apparaissent plus pour les clients.</p>
+            </div>
+
             <!-- ===== PANNEAU GALERIE ===== -->
             <div class="panel" id="panelGallery">
                 <div class="gal-toolbar">
@@ -548,6 +581,19 @@
                                 <em>Laissez vide pour l'image par défaut.</em>
                             </p>
                         </div>
+                    </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Bannière promotionnelle</h3>
+                    <div class="cfg-grid">
+                        <div class="cfg-field full">
+                            <label class="hours-switch"><input type="checkbox" id="promoEnabled"> Afficher la bannière sur le site</label>
+                        </div>
+                        <div class="cfg-field cfg-full"><label>Texte (ex : Offre balayage −20% jusqu'au 30 avril)</label><input type="text" id="promoText" maxlength="160"></div>
+                        <div class="cfg-field"><label>Lien (optionnel, ex : https://...)</label><input type="text" id="promoLink"></div>
+                        <div class="cfg-field"><label>Couleur de fond</label><input type="color" id="promoColor"></div>
+                        <div class="cfg-field"><label>Couleur du texte</label><input type="color" id="promoTextColor"></div>
                     </div>
                 </div>
 
@@ -687,6 +733,38 @@
 
     <div class="toast" id="toast"></div>
 
+    <!-- ===== MODAL PRESTATION ===== -->
+    <div class="modal-overlay" id="serviceModal">
+        <div class="modal modal-sm">
+            <h2 id="serviceModalTitle">Nouvelle prestation</h2>
+            <div class="modal-grid">
+                <div class="form-group full">
+                    <label>Nom</label>
+                    <input type="text" id="svcName" placeholder="Ex : Forfait Balayage">
+                </div>
+                <div class="form-group">
+                    <label>Catégorie</label>
+                    <input type="text" id="svcCat" placeholder="Ex : Balayage">
+                </div>
+                <div class="form-group">
+                    <label>Prix affiché</label>
+                    <input type="text" id="svcPrice" placeholder="Ex : 220 CHF">
+                </div>
+                <div class="form-group">
+                    <label>Durée (minutes)</label>
+                    <input type="number" id="svcDuration" min="5" step="5" placeholder="Ex : 60">
+                </div>
+                <div class="form-group full">
+                    <label class="hours-switch"><input type="checkbox" id="svcActive" checked> Visible sur le site</label>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" onclick="closeModal('serviceModal')">Annuler</button>
+                <button class="btn btn-primary" onclick="saveService()">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== MODAL BLOQUER UN CRÉNEAU ===== -->
     <div class="modal-overlay" id="blockModal">
         <div class="modal modal-sm">
@@ -737,10 +815,32 @@
         };
         const STATUS_LABELS = { pending: 'En attente', confirmed: 'Confirmé', done: 'Terminé', cancelled: 'Annulé' };
 
+        // Prestations : chargées depuis la base (repli sur ce tableau par défaut)
+        const DEFAULT_SERVICES = [
+            { id: 'balayage', name: 'Forfait Balayage', cat: 'Balayage', price: '220 CHF', duration: 180 },
+            { id: 'refresh', name: 'Forfait Refresh Balayage', cat: 'Balayage', price: '170 CHF', duration: 150 },
+            { id: 'patine', name: 'Forfait Patine', cat: 'Balayage', price: '118 CHF', duration: 120 },
+            { id: 'meche-court', name: 'Forfait Mèche cheveux court', cat: 'Balayage', price: '105 CHF', duration: 90 },
+            { id: 'racine', name: 'Coloration Racine', cat: 'Coloration', price: '48 CHF', duration: 90 },
+            { id: 'color-total', name: 'Coloration totale', cat: 'Coloration', price: '58 CHF', duration: 120 },
+            { id: 'coupe-brushing', name: 'Coupe & Brushing', cat: 'Coupe & Brushing', price: 'À partir de 55 CHF', duration: 60 },
+            { id: 'brushing', name: 'Brushing', cat: 'Coupe & Brushing', price: 'À partir de 49 CHF', duration: 45 },
+            { id: 'cut-go', name: 'Cut and Go', cat: 'Coupe & Brushing', price: '20 CHF', duration: 20 },
+        ];
+        let dbServices = null; // null tant que la table n'a pas été chargée
+
+        function serviceOptions() {
+            return (dbServices || DEFAULT_SERVICES).filter(s => s.active !== false);
+        }
+        function durationFor(serviceName) {
+            const s = (dbServices || DEFAULT_SERVICES).find(x => x.name === serviceName);
+            return s ? s.duration : 60;
+        }
+
         let allBookings = [];
         let currentRow = null;
         let blockedSlotsCache = []; // [{date, time, note}]
-        let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '' };
+        let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '', promo: {} };
 
         // ===== AUTH =====
         let isSignUpMode = false;
@@ -807,6 +907,7 @@
             document.getElementById('dashboard').style.display = 'block';
             loadBookings();
             loadSettingsAdmin();
+            loadServicesAdmin();
             loadGalleryAdmin();
         }
 
@@ -923,6 +1024,113 @@
             return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
         }
 
+        // ===== PRESTATIONS (admin) =====
+        let editingServiceId = null;
+
+        async function loadServicesAdmin() {
+            const { data, error } = await db
+                .from('services')
+                .select('*')
+                .order('sort_order', { ascending: true });
+            if (error) { console.error('loadServicesAdmin', error); return; }
+            if (data && Array.isArray(data)) dbServices = data;
+            renderServicesAdmin();
+        }
+
+        function renderServicesAdmin() {
+            const list = (dbServices || DEFAULT_SERVICES);
+            const el = document.getElementById('serviceList');
+            if (list.length === 0) {
+                el.innerHTML = '<div class="gal-empty">Aucune prestation. Ajoutez-en une !</div>';
+                return;
+            }
+            el.innerHTML = list.map((s, i) => `
+                <div class="service-card${s.active === false ? ' inactive' : ''}">
+                    <div class="service-main">
+                        <div class="service-name">${escapeHtml(s.name)}</div>
+                        <div class="service-cat">${escapeHtml(s.cat)}</div>
+                    </div>
+                    <div class="service-dims"><b>${escapeHtml(s.price)}</b><br>${s.duration} min</div>
+                    <div class="service-actions">
+                        <button class="icon-btn" title="Monter" onclick="moveService(${i}, -1)">▲</button>
+                        <button class="icon-btn" title="Descendre" onclick="moveService(${i}, 1)">▼</button>
+                        <button class="icon-btn ${s.active === false ? '' : 'confirm'}" title="${s.active === false ? 'Activer' : 'Désactiver'}" onclick="toggleService('${s.id}')">${s.active === false ? '◌' : '✓'}</button>
+                        <button class="icon-btn" title="Modifier" onclick="openServiceEditor('${s.id}')">✏️</button>
+                        <button class="icon-btn delete" title="Supprimer" onclick="deleteService('${s.id}')">🗑</button>
+                    </div>
+                </div>`).join('');
+        }
+
+        function openServiceEditor(id) {
+            editingServiceId = id || null;
+            const svc = id ? (dbServices || []).find(s => s.id === id) : null;
+            document.getElementById('serviceModalTitle').textContent = svc ? 'Modifier la prestation' : 'Nouvelle prestation';
+            document.getElementById('svcName').value = svc ? svc.name : '';
+            document.getElementById('svcCat').value = svc ? svc.cat : '';
+            document.getElementById('svcPrice').value = svc ? svc.price : '';
+            document.getElementById('svcDuration').value = svc ? svc.duration : 60;
+            document.getElementById('svcActive').checked = svc ? svc.active !== false : true;
+            openModal('serviceModal');
+        }
+
+        async function saveService() {
+            const name = document.getElementById('svcName').value.trim();
+            const cat = document.getElementById('svcCat').value.trim();
+            const price = document.getElementById('svcPrice').value.trim();
+            const duration = parseInt(document.getElementById('svcDuration').value, 10);
+            const active = document.getElementById('svcActive').checked;
+            if (!name || !cat || !price || isNaN(duration) || duration < 5) {
+                showToast('Renseignez nom, catégorie, prix et une durée valide');
+                return;
+            }
+            const list = dbServices || DEFAULT_SERVICES;
+            if (editingServiceId) {
+                const { error } = await db.from('services').update({ name, cat, price, duration, active })
+                    .eq('id', editingServiceId);
+                if (error) { showToast('Erreur : ' + error.message); return; }
+            } else {
+                let id = name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                    .replace(/&/g, 'et').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'service';
+                let base = id, n = 1;
+                while (list.some(s => s.id === base)) base = `${id}-${n++}`;
+                id = base;
+                const sort = list.length ? Math.max(...list.map(s => s.sort_order || 0)) + 1 : 1;
+                const { error } = await db.from('services').insert([{ id, name, cat, price, duration, active, sort_order: sort }]);
+                if (error) { showToast('Erreur : ' + error.message); return; }
+            }
+            closeModal('serviceModal');
+            showToast('Prestation enregistrée ✔');
+            loadServicesAdmin();
+        }
+
+        async function toggleService(id) {
+            const s = (dbServices || []).find(x => x.id === id);
+            if (!s) return;
+            if (s.active === false && !confirm('Réactiver cette prestation sur le site ?')) return;
+            const { error } = await db.from('services').update({ active: s.active === false }).eq('id', id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            loadServicesAdmin();
+        }
+
+        async function deleteService(id) {
+            const s = (dbServices || []).find(x => x.id === id);
+            if (!confirm(`Supprimer « ${s ? s.name : 'cette prestation'} » ? Cette action est irréversible.`)) return;
+            const { error } = await db.from('services').delete().eq('id', id);
+            if (error) { showToast('Erreur : ' + error.message); return; }
+            showToast('Prestation supprimée');
+            loadServicesAdmin();
+        }
+
+        async function moveService(index, dir) {
+            const list = dbServices || DEFAULT_SERVICES;
+            const j = index + dir;
+            if (j < 0 || j >= list.length) return;
+            const a = list[index], b = list[j];
+            await db.from('services').update({ sort_order: b.sort_order }).eq('id', a.id);
+            await db.from('services').update({ sort_order: a.sort_order }).eq('id', b.id);
+            loadServicesAdmin();
+        }
+
         // ===== DETAILS =====
         function findRow(id) { return allBookings.find(b => b.id === id); }
 
@@ -950,11 +1158,13 @@
         function openEdit(row) {
             if (!row) return;
             currentRow = row;
-            document.getElementById('editService').innerHTML = SERVICES.map(s =>
-                `<option value="${s}" ${s === row.service_name ? 'selected' : ''}>${s}</option>`
+            const prods = serviceOptions();
+            document.getElementById('editService').innerHTML = prods.map(s =>
+                `<option value="${s.name}" ${s.name === row.service_name ? 'selected' : ''}>${s.name}</option>`
             ).join('');
             document.getElementById('editService').onchange = () => {
-                document.getElementById('editPrice').value = PRICES[document.getElementById('editService').value] || '';
+                const picked = prods.find(p => p.name === document.getElementById('editService').value);
+                document.getElementById('editPrice').value = picked ? picked.price : '';
             };
             document.getElementById('editPrice').value = row.service_price;
             document.getElementById('editDate').value = row.date;
@@ -1069,7 +1279,7 @@
         }
 
         function calDurationFor(service) {
-            return CAL_DURATIONS[service] || 60;
+            return durationFor(service);
         }
 
         // Place les rendez-vous concurrents en sous-colonnes de largeurs égales
@@ -1239,7 +1449,7 @@
         // ===== MODALS & TOAST =====
         function openModal(id) { document.getElementById(id).classList.add('open'); }
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-        ['detailsModal', 'editModal', 'blockModal'].forEach(id =>
+        ['detailsModal', 'editModal', 'blockModal', 'serviceModal'].forEach(id =>
             document.getElementById(id).addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
             })
@@ -1259,8 +1469,9 @@
             document.querySelectorAll('#dashboardTabs .dash-tab').forEach(t => {
                 t.classList.toggle('active', t.getAttribute('onclick').indexOf(name) !== -1);
             });
-            ['bookings', 'gallery', 'content', 'hours'].forEach(p => {
-                document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1)).classList.toggle('active', p === name);
+            ['bookings', 'prestations', 'gallery', 'content', 'hours'].forEach(p => {
+                const el = document.getElementById('panel' + p.charAt(0).toUpperCase() + p.slice(1));
+                if (el) el.classList.toggle('active', p === name);
             });
         }
 
@@ -1311,6 +1522,14 @@
                 document.getElementById('heroPreview').src = 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=600&q=80';
                 document.getElementById('heroReset').style.display = 'none';
             }
+
+            // Bannière promo
+            const p = currentSettings.promo || {};
+            document.getElementById('promoEnabled').checked = !!p.enabled;
+            document.getElementById('promoText').value = p.text || '';
+            document.getElementById('promoLink').value = p.link || '';
+            document.getElementById('promoTextColor').value = p.text_color || '#ffffff';
+            document.getElementById('promoColor').value = p.color || '#c9a87c';
         }
 
         function renderHoursForm() {
@@ -1374,11 +1593,21 @@
             };
             for (const k in txtMap) { const v = readTxt(txtMap[k]); if (v) texts[k] = v; }
 
+            // Bannière promo
+            const promo = {
+                enabled: document.getElementById('promoEnabled').checked,
+                text: document.getElementById('promoText').value.trim(),
+                link: document.getElementById('promoLink').value.trim(),
+                color: document.getElementById('promoColor').value,
+                text_color: document.getElementById('promoTextColor').value
+            };
+
             const payload = {
                 colors,
                 texts,
                 hours: currentSettings.hours || {},
-                hero_image: pendingHeroUrl || currentSettings.hero_image || ''
+                hero_image: pendingHeroUrl || currentSettings.hero_image || '',
+                promo
             };
             await saveSettings(payload, btn, 'Contenu enregistré ✔');
         }

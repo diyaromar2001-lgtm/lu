@@ -29,8 +29,13 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
     image de couverture (hero)
 - **Horaires puisant dans une base de données** : réglables depuis l'admin,
   appliqués à la fois au calendrier de réservation et à la section "Horaires"
+- **Prestations & prix gérés depuis l'admin** : ajouter / modifier / supprimer /
+  activer / réordonner un forfait (durée, catégorie, prix) sans toucher au code
+- **Bannière promotionnelle** : texte + lien + couleur, activable depuis l'admin
 - **Blocage de créneaux** depuis le calendrier admin (ex. congés, indisponibilités) :
   ils sont **masqués aux clients** du site public
+- **SEO local** : title, description, Open Graph, données structurées
+  `HairSalon` (adresse, horaires, téléphone) pour mieux apparaître dans Google
 
 ## Prérequis
 
@@ -138,9 +143,9 @@ Puis ouvrez http://localhost:8080
 ## Personnalisation rapide
 
 - **WhatsApp** : modifiez `WA_NUMBER` dans `config.js` (format international sans `+`)
-- **Contenu / couleurs / horaires / galerie** : connectez-vous sur `admin.html`
-  → onglets **Galerie**, **Contenu**, **Horaires** (le changement est appliqué
-  immédiatement sur le site public)
+- **Contenu / couleurs / horaires / galerie / prestations / promo** :
+  connectez-vous sur `admin.html` → onglets **Prestations**, **Galerie**,
+  **Contenu**, **Horaires** (changement appliqué immédiatement sur le site public)
 - **Horaires d'ouverture** : onglet **Horaires** de l'admin (ou défaut dans
   `OPEN_HOURS` dans `index.html`)
 - **Prestations / prix** : modifiez l'objet `SERVICES` dans `index.html`
