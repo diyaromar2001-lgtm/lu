@@ -48,7 +48,15 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
 - **Rappels WhatsApp de demain** (onglet **Rappels** de l'admin) : liste des
   rendez-vous confirmés du lendemain avec un bouton 💬 ouvrant un rappel
   prérempli prêt à envoyer à chaque cliente
+- **Avis Google** : bouton « Laissez un avis Google » sur la page d'accueil
+  (lien défini dans **Contenu** de l'admin) + bouton ⭐ « Demander un avis »
+  dans l'onglet **Rappels** pour envoyer un message WhatsApp à la cliente
+  après son rendez-vous
+- **Statistiques & chiffre d'affaires** : l'admin affiche en plus le **CA du
+  mois**, le **CA total** (estimés), la **prestation la plus demandée** et la
+  **cliente la plus fidèle**
 - **Logo & favicon** : `logo.svg` et `favicon.svg` (monogramme doré PreTalli)
+  ; logo remplaçable depuis **Contenu** de l'admin
 
 ## Prérequis
 
@@ -119,7 +127,9 @@ pretalli-site/
 
 Rendez-vous sur `votre-site/admin.html` et connectez-vous :
 
-- **Statistiques** : aujourd'hui, en attente, à venir, total
+- **Statistiques** : aujourd'hui, en attente, à venir, total + **CA du mois**,
+  **CA total** (estimés), **top prestation**, **cliente la plus fidèle**
+  (le CA est calculé sur les tarifs affichés, hors rendez-vous annulés)
 - **Filtres** : statut (attente/confirmé/terminé/annulé), période, recherche
 - **+ Nouveau rdv** : créer un rendez-vous manuellement (téléphone, marche)
 - **💬** envoyer un **rappel WhatsApp** au client (message prérempli)
@@ -148,6 +158,8 @@ Onglet **Rappels** :
   y sont listés avec un bouton 💬
 - Cliquez sur 💬 pour ouvrir WhatsApp avec un rappel prérempli, prêt à envoyer
   à la cliente (message : service, date, heure, adresse)
+- Cliquez sur ⭐ pour demander un avis **Google** après le rendez-vous
+  (bouton visible si le lien Google est renseigné dans **Contenu**)
 
 > Sécurité : seul l'email inscrit dans la table `admins` peut voir et gérer
 > les rendez-vous. Les visiteurs du site ne voient que les créneaux occupés
@@ -182,6 +194,8 @@ Puis ouvrez http://localhost:8080
 ## Personnalisation rapide
 
 - **WhatsApp** : modifiez `WA_NUMBER` dans `config.js` (format international sans `+`)
+- **Avis Google** : onglet **Contenu** de l'admin → « Avis Google » → collez le
+  lien de votre fiche Google Maps (Partage → Copier le lien sur l'appli Google Maps)
 - **Avis** : onglet **Avis** de l'admin (après avoir exécuté la section
   « Avis clients » de `database.sql`)
 - **Contenu / couleurs / horaires / galerie / prestations / promo** :

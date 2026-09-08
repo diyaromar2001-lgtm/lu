@@ -214,6 +214,12 @@
         .stat-card .value.pending { color: var(--color-warning); }
         .stat-card .value.upcoming { color: var(--color-info); }
         .stat-card .value.total { color: var(--color-text); }
+        .stat-card .value.revenue { color: var(--color-success); font-size: 1.7rem; }
+        .stat-card .value.top { color: var(--color-text); }
+        .stat-card.stat-top .value {
+            font-family: var(--font-body); font-weight: 600; font-size: 1.05rem; line-height: 1.35;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
 
         /* Filters */
         .filters {
@@ -584,6 +590,10 @@
             box-shadow: 0 4px 14px rgba(37,211,102,0.35); transition: transform 0.25s, box-shadow 0.25s; text-decoration: none;
         }
         .reminder-wa:hover { transform: translateY(-2px); box-shadow: 0 6px 22px rgba(37,211,102,0.45); }
+        .reminder-wa.review {
+            background: #4285F4; box-shadow: 0 4px 14px rgba(66,133,244,0.3);
+        }
+        .reminder-wa.review:hover { box-shadow: 0 6px 22px rgba(66,133,244,0.42); }
 
         /* Fiches clientes */
         .client-list { display: grid; gap: 0.75rem; margin-bottom: 1rem; }
@@ -723,6 +733,10 @@
                 <div class="stat-card"><div class="value pending" id="statPending">—</div><div class="label">En attente</div></div>
                 <div class="stat-card"><div class="value upcoming" id="statUpcoming">—</div><div class="label">À venir</div></div>
                 <div class="stat-card"><div class="value total" id="statTotal">—</div><div class="label">Total</div></div>
+                <div class="stat-card"><div class="value revenue" id="statMonthRevenue">—</div><div class="label">CA ce mois (estimé)</div></div>
+                <div class="stat-card"><div class="value revenue" id="statTotalRevenue">—</div><div class="label">CA total (estimé)</div></div>
+                <div class="stat-card stat-top"><div class="value top" id="statTopService">—</div><div class="label">Top prestation</div></div>
+                <div class="stat-card stat-top"><div class="value top" id="statTopClient">—</div><div class="label">Cliente la plus fidèle</div></div>
             </div>
 
             <!-- Filters -->
@@ -793,7 +807,7 @@
                     <button class="btn btn-primary" onclick="loadReminders()">Actualiser</button>
                 </div>
                 <div class="reminder-list" id="reminderList"><div class="gal-empty">Chargement...</div></div>
-                <p class="gal-hint">Les rendez-vous <strong>confirmés</strong> de <strong>demain</strong> sont listés ici. Cliquez sur 💬 pour ouvrir WhatsApp avec un rappel prérempli, prêt à envoyer à la cliente.</p>
+                <p class="gal-hint">Les rendez-vous <strong>confirmés</strong> de <strong>demain</strong> sont listés ici. Cliquez sur 💬 pour ouvrir WhatsApp avec un rappel prérempli, ou sur ⭐ pour demander un avis Google à la cliente (ligible si le lien Google est défini dans <strong>Contenu</strong>).</p>
             </div>
 
             <!-- ===== PANNEAU CLIENTES ===== -->
@@ -876,6 +890,14 @@
                             </p>
                         </div>
                     </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Avis Google</h3>
+                    <div class="cfg-grid">
+                        <div class="cfg-field cfg-full"><label>Lien de votre fiche Google</label><input type="text" id="googleReviewUrl" placeholder="https://g.page/r/… ou https://maps.google.com/?cid=…"></div>
+                    </div>
+                    <p class="gal-hint">Ce lien alimente le bouton « Laissez un avis Google » sur le site et l'option « Demander un avis » des Rappels WhatsApp.<br><em>Comment le trouver : ouvrez votre fiche Google Maps sur téléphone, touchez « Partager » puis « Copier le lien ».</em></p>
                 </div>
 
                 <div class="cfg-card">
@@ -1235,7 +1257,7 @@
         let allBookings = [];
         let currentRow = null;
         let blockedSlotsCache = []; // [{date, time, note}]
-        let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '', promo: {} };
+        let currentSettings = { colors: {}, texts: {}, hours: {}, hero_image: '', google_review_url: '', promo: {} };
         let clientsCache = [];
         let currentClient = null;
 
@@ -1348,15 +1370,51 @@
             if (document.getElementById('weekView').style.display === 'block') renderWeekCalendar();
         }
 
+        function priceValue(s) {
+            if (!s) return 0;
+            const m = String(s).replace(',', '.').match(/(\d+(?:\.\d+)?)/);
+            return m ? parseFloat(m[1]) : 0;
+        }
+
         function updateStats() {
             const today = new Date().toISOString().split('T')[0];
-            const todayCount = allBookings.filter(b => b.date === today && b.status !== 'cancelled').length;
+            const month = today.slice(0, 7);
+            const active = allBookings.filter(b => b.status !== 'cancelled');
             const pendingCount = allBookings.filter(b => b.status === 'pending').length;
-            const upcomingCount = allBookings.filter(b => b.date >= today && b.status !== 'cancelled').length;
-            document.getElementById('statToday').textContent = todayCount;
+
+            const monthRevenue = active
+                .filter(b => (b.date || '').slice(0, 7) === month)
+                .reduce((s, b) => s + priceValue(b.service_price), 0);
+            const totalRevenue = active.reduce((s, b) => s + priceValue(b.service_price), 0);
+
+            const serviceCounts = {};
+            const clientCounts = {};
+            active.forEach(b => {
+                const sv = (b.service_name || '—').trim();
+                serviceCounts[sv] = (serviceCounts[sv] || 0) + 1;
+                const ph = (b.client_phone || '').trim();
+                if (ph) clientCounts[ph] = (clientCounts[ph] || 0) + 1;
+            });
+            const topService = Object.entries(serviceCounts).sort((a, b) => b[1] - a[1])[0];
+            const topPhone = Object.entries(clientCounts).sort((a, b) => b[1] - a[1])[0];
+            let topClientName = null;
+            if (topPhone) {
+                const sample = allBookings.find(b => (b.client_phone || '').trim() === topPhone[0]);
+                topClientName = (sample && sample.client_name) || null;
+            }
+
+            document.getElementById('statToday').textContent = active.filter(b => b.date === today).length;
             document.getElementById('statPending').textContent = pendingCount;
-            document.getElementById('statUpcoming').textContent = upcomingCount;
+            document.getElementById('statUpcoming').textContent = active.filter(b => b.date >= today).length;
             document.getElementById('statTotal').textContent = allBookings.length;
+            document.getElementById('statMonthRevenue').textContent = 'CHF ' + monthRevenue.toLocaleString('fr-CH');
+            document.getElementById('statTotalRevenue').textContent = 'CHF ' + totalRevenue.toLocaleString('fr-CH');
+            const ts = document.getElementById('statTopService');
+            ts.textContent = topService ? topService[0] : '—';
+            ts.title = topService ? (topService[1] + ' rendez-vous') : '';
+            const tc = document.getElementById('statTopClient');
+            tc.textContent = topClientName ? String(topClientName).split(' ').slice(0, 2).join(' ') : '—';
+            tc.title = topPhone ? (topPhone[1] + ' visites') : '';
         }
 
         function applyFilters() {
@@ -1852,6 +1910,12 @@
         function waReminderText(b) {
             return `Bonjour ${b.client_name} ✂️, petit rappel : ${b.service_name}, le ${formatDateLong(b.date)} à ${b.time} chez PreTalli Coiffure. Au plaisir de vous voir !`;
         }
+        function waReviewText(b) {
+            const url = (currentSettings.google_review_url || '').trim();
+            const base = `Bonjour ${b.client_name} ✨, merci pour votre visite chez PreTalli Coiffure !`;
+            if (url) return `${base} Si vous avez apprécié, nous serions ravis d'avoir votre avis sur Google : ${url} Merci d'avance 🌷`;
+            return `${base} À bientôt !`;
+        }
         function openWaConfirmation(b) {
             if (!b) return showToast('Rendez-vous introuvable');
             window.open(waLink(b.client_phone, waConfirmationText(b)), '_blank');
@@ -1887,6 +1951,8 @@
             wrap.innerHTML = rows.map(b => {
                 const phone = normPhone(b.client_phone);
                 const href = phone ? waLink(phone, waReminderText(b)) : '#';
+                const reviewHref = phone && (currentSettings.google_review_url || '').trim()
+                    ? waLink(phone, waReviewText(b)) : '';
                 return `
                     <div class="reminder-card">
                         <div class="reminder-time">${escapeHtml(b.time)}</div>
@@ -1895,6 +1961,7 @@
                             <div class="reminder-client">${escapeHtml(b.client_name)} &bull; ${escapeHtml(b.client_phone || '—')} &bull; demain</div>
                         </div>
                         ${phone ? `<a class="reminder-wa" href="${href}" target="_blank" rel="noopener">💬 Envoyer le rappel</a>` : '<span class="gal-hint" style="margin:0;">Téléphone manquant</span>'}
+                        ${reviewHref ? `<a class="reminder-wa review" href="${reviewHref}" target="_blank" rel="noopener">⭐ Demander un avis</a>` : ''}
                     </div>`;
             }).join('');
         }
@@ -2424,6 +2491,9 @@
                 if (lr) lr.style.display = 'none';
             }
 
+            // Avis Google
+            document.getElementById('googleReviewUrl').value = currentSettings.google_review_url || '';
+
             // Bannière promo
             const p = currentSettings.promo || {};
             document.getElementById('promoEnabled').checked = !!p.enabled;
@@ -2509,6 +2579,7 @@
                 hours: currentSettings.hours || {},
                 hero_image: pendingHeroUrl || currentSettings.hero_image || '',
                 logo_url: pendingLogoUrl || currentSettings.logo_url || '',
+                google_review_url: document.getElementById('googleReviewUrl').value.trim(),
                 promo
             };
             await saveSettings(payload, btn, 'Contenu enregistré ✔');

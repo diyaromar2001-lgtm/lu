@@ -209,6 +209,7 @@ insert into public.settings (key, value) values
 ('site_content', '{
   "hero_image": "",
   "logo_url": "",
+  "google_review_url": "",
   "colors": {
     "accent": "#c9a87c",
     "accent_dark": "#b8935f",
