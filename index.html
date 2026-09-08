@@ -1198,6 +1198,14 @@
             }
         }
 
+        // --- Logo du salon (menu + favicon) ---
+        if (cfg.logo_url) {
+            const navImg = document.querySelector('.nav-logo-icon');
+            if (navImg) navImg.src = cfg.logo_url;
+            const fav = document.querySelector('link[rel="icon"]');
+            if (fav) fav.href = cfg.logo_url;
+        }
+
         // --- Couleurs globales (variables CSS) ---
         const c = cfg.colors || {};
         if (c.accent) root.setProperty('--color-accent', c.accent);
