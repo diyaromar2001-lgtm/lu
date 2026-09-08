@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 220" role="img" aria-label="PreTalli Coiffure">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6c886"/>
+      <stop offset="0.5" stop-color="#c9a87c"/>
+      <stop offset="1" stop-color="#a8864f"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3ddae"/>
+      <stop offset="1" stop-color="#c9a87c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ciseaux -->
+  <g transform="rotate(-45 470 40)">
+    <ellipse cx="452" cy="40" rx="14" ry="30" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <ellipse cx="488" cy="40" rx="14" ry="30" fill="none" stroke="url(#gold)" stroke-width="7"/>
+    <line x1="470" y1="58" x2="470" y2="150" stroke="url(#gold)" stroke-width="7" stroke-linecap="round"/>
+    <line x1="452" y1="58" x2="470" y2="150" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" opacity="0.0"/>
+  </g>
+
+  <!-- Initiale P -->
+  <text x="120" y="170" font-family="Georgia, 'Times New Roman', serif" font-size="150" fill="url(#gold)" font-weight="600">P</text>
+
+  <!-- Titre -->
+  <text x="230" y="118" font-family="Georgia, 'Times New Roman', serif" font-size="64" fill="#f7f0e3" font-weight="400">re<i>Talli</i></text>
+  <text x="230" y="170" font-family="Georgia, 'Times New Roman', serif" font-size="30" fill="url(#goldSoft)" letter-spacing="8" font-weight="400">COIFFURE</text>
+
+  <!-- Fil doré décoratif -->
+  <line x1="230" y1="140" x2="420" y2="140" stroke="url(#gold)" stroke-width="1.5" opacity="0.6"/>
+  <!-- Cheveux stylisés -->
+  <path d="M 470 70 C 490 95 490 125 470 150 C 500 125 500 95 470 70 Z" fill="url(#gold)" opacity="0.85"/>
+  <path d="M 485 70 C 505 95 505 125 485 150 C 515 125 515 95 485 70 Z" fill="url(#goldSoft)" opacity="0.7"/>
+  <path d="M 455 70 C 475 95 475 125 455 150 C 485 125 485 95 455 70 Z" fill="#d9bd8c" opacity="0.6"/>
+</svg>

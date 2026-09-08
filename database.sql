@@ -360,3 +360,33 @@ drop policy if exists "clients auth delete" on public.clients;
 create policy "clients auth delete" on public.clients for delete using (auth.role() = 'authenticated');
 
 grant select, insert, update, delete on public.clients to authenticated;
+
+-- ------------------------------------------------------------
+-- 12. Avis clients (affichés sur la page d'accueil)
+-- ------------------------------------------------------------
+-- Gérez les témoignages depuis l'admin : auteur, note sur 5,
+-- texte, date d'affichage et activation.
+create table if not exists public.reviews (
+  id uuid primary key default gen_random_uuid(),
+  author text not null,
+  rating int not null default 5 check (rating between 1 and 5),
+  text text not null,
+  created_at timestamptz not null default now(),
+  active boolean not null default true,
+  sort_order int default 0
+);
+
+alter table public.reviews enable row level security;
+
+-- Tout le monde lit les avis actifs, un connecté les modifie
+drop policy if exists "reviews public read" on public.reviews;
+create policy "reviews public read" on public.reviews for select using (true);
+drop policy if exists "reviews auth insert" on public.reviews;
+create policy "reviews auth insert" on public.reviews for insert with check (auth.role() = 'authenticated');
+drop policy if exists "reviews auth update" on public.reviews;
+create policy "reviews auth update" on public.reviews for update using (auth.role() = 'authenticated');
+drop policy if exists "reviews auth delete" on public.reviews;
+create policy "reviews auth delete" on public.reviews for delete using (auth.role() = 'authenticated');
+
+grant select on public.reviews to anon, authenticated;
+grant select, insert, update, delete on public.reviews to authenticated;

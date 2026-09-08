@@ -9,6 +9,8 @@
     <meta name="robots" content="index, follow">
     <meta name="theme-color" content="#1a1512">
     <link rel="canonical" href="https://lu-beta.vercel.app/">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="apple-touch-icon" href="favicon.svg">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
@@ -142,9 +144,11 @@
         .nav-logo {
             font-family: var(--font-heading); font-size: 1.5rem; font-weight: 600;
             color: var(--color-white); text-decoration: none; letter-spacing: 0.02em; transition: color 0.4s;
+            display: inline-flex; align-items: center; gap: 0.5rem;
         }
+        .nav-logo-icon { width: 28px; height: 28px; border-radius: 7px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .nav-logo::before {
-            content: '✦ '; color: var(--color-accent); font-size: 0.9rem; vertical-align: middle;
+            content: ''; display: none;
         }
         nav.scrolled .nav-logo { color: var(--color-text); }
         .nav-links { display: flex; gap: 2.5rem; list-style: none; }
@@ -538,11 +542,24 @@
 
         /* ===== HOURS ===== */
         .hours-section { background: var(--color-white); }
-        .hours-grid { max-width: 900px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
-        .hours-card, .contact-card { background: var(--color-cream); border-radius: 24px; padding: 2.8rem; box-shadow: var(--shadow-sm); border: 1px solid rgba(26,21,18,0.04); transition: transform 0.35s var(--ease-out), box-shadow 0.35s; }
-        .hours-card:hover, .contact-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-        .hours-card h3, .contact-card h3 { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 500; margin-bottom: 1.6rem; position: relative; padding-bottom: 0.9rem; }
-        .hours-card h3::after, .contact-card h3::after { content: ''; position: absolute; left: 0; bottom: 0; width: 36px; height: 2px; background: var(--color-accent); }
+        .hours-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2rem 2.5rem; align-items: start; }
+        .hours-card, .contact-card, .contact-form-card { background: var(--color-cream); border-radius: 24px; padding: 2.8rem; box-shadow: var(--shadow-sm); border: 1px solid rgba(26,21,18,0.04); transition: transform 0.35s var(--ease-out), box-shadow 0.35s; }
+        .hours-card:hover, .contact-card:hover, .contact-form-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+        .hours-card h3, .contact-card h3, .contact-form-card h3 { font-family: var(--font-heading); font-size: 1.35rem; font-weight: 500; margin-bottom: 1.6rem; position: relative; padding-bottom: 0.9rem; }
+        .hours-card h3::after, .contact-card h3::after, .contact-form-card h3::after { content: ''; position: absolute; left: 0; bottom: 0; width: 36px; height: 2px; background: var(--color-accent); }
+        .contact-form-card form { display: grid; gap: 1rem; }
+        .contact-form-card .field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--color-text-light); margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .contact-form-card .field input, .contact-form-card .field textarea {
+            width: 100%; border: 1px solid rgba(26,21,18,0.15); border-radius: 12px;
+            padding: 0.75rem 1rem; font-family: inherit; font-size: 0.92rem; background: var(--color-white);
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .contact-form-card .field input:focus, .contact-form-card .field textarea:focus { outline: none; border-color: var(--color-accent); box-shadow: 0 0 0 3px rgba(201,168,124,0.18); }
+        .contact-form-card .form-note { font-size: 0.78rem; color: var(--color-text-light); }
+        .contact-form-msg { font-size: 0.85rem; font-weight: 600; display: none; }
+        .contact-form-msg.ok { color: var(--color-success, #2ea44f); }
+        .contact-form-msg.err { color: var(--color-danger, #d64545); }
+        .hours-grid.two { grid-template-columns: 1fr 1fr; }
         .hours-row { display: flex; justify-content: space-between; padding: 0.85rem 0; border-bottom: 1px solid rgba(0,0,0,0.06); font-size: 0.9rem; }
         .hours-row:last-child { border-bottom: none; }
         .hours-day { font-weight: 500; }
@@ -628,6 +645,56 @@
         .gallery-item:hover .gallery-caption { opacity: 1; transform: translateY(0); }
         .gallery-empty { text-align: center; color: var(--color-text-light); padding: 3rem; }
 
+        /* ===== LIGHTBOX ===== */
+        .lightbox {
+            position: fixed; inset: 0; z-index: 2000;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(10,8,6,0.92);
+            opacity: 0; visibility: hidden;
+            transition: opacity 0.35s ease, visibility 0.35s;
+        }
+        .lightbox.open { opacity: 1; visibility: visible; }
+        .lightbox-img {
+            max-width: 88vw; max-height: 82vh; border-radius: 12px;
+            box-shadow: 0 20px 80px rgba(0,0,0,0.6);
+            transform: scale(0.94); transition: transform 0.35s var(--ease-out);
+            object-fit: contain;
+        }
+        .lightbox.open .lightbox-img { transform: scale(1); }
+        .lightbox-close {
+            position: absolute; top: 20px; right: 24px;
+            background: none; border: none; color: #fff; font-size: 1.6rem; cursor: pointer;
+            width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;
+            border-radius: 50%; transition: background 0.25s;
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.15); }
+        .lightbox-nav {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            background: rgba(255,255,255,0.08); border: none; color: #fff;
+            font-size: 1.8rem; width: 52px; height: 52px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: background 0.25s; backdrop-filter: blur(4px);
+        }
+        .lightbox-nav:hover { background: rgba(201,168,124,0.35); }
+        .lightbox-nav.prev { left: 20px; }
+        .lightbox-nav.next { right: 20px; }
+        .lightbox-caption {
+            position: absolute; bottom: 26px; left: 50%; transform: translateX(-50%);
+            color: rgba(255,255,255,0.85); font-size: 0.95rem; text-align: center; max-width: 70%;
+        }
+        .lightbox-counter {
+            position: absolute; top: 22px; left: 24px;
+            color: rgba(255,255,255,0.55); font-size: 0.85rem; letter-spacing: 0.06em;
+        }
+        @media (max-width: 1024px) {
+            .hours-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 640px) {
+            .lightbox-nav { width: 42px; height: 42px; font-size: 1.4rem; }
+            .lightbox-nav.prev { left: 8px; }
+            .lightbox-nav.next { right: 8px; }
+        }
+
         /* ===== WHATSAPP ===== */
         .whatsapp-float {
             position: fixed; bottom: 2rem; right: 2rem; z-index: 999;
@@ -711,7 +778,7 @@
 
     <!-- Navigation -->
     <nav id="navbar">
-        <a href="#" class="nav-logo">PreTalli</a>
+        <a href="#" class="nav-logo"><img src="favicon.svg" alt="" class="nav-logo-icon">PreTalli</a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#about">À propos</a></li>
             <li><a href="#services">Prestations</a></li>
@@ -907,29 +974,11 @@
             <h2 id="reviewsTitle">Ce qu'en disent <em>nos clients</em></h2>
         </div>
         <div class="reviews-rating reveal" data-delay>
-            <div class="big-number">5.0</div>
+            <div class="big-number" id="reviewsBig">5.0</div>
             <div class="stars">★★★★★</div>
-            <div class="count">7 avis vérifiés</div>
+            <div class="count" id="reviewsCount">7 avis vérifiés</div>
         </div>
-        <div class="reviews-grid reveal stagger">
-            <div class="review-card">
-                <div class="review-stars">★★★★★</div>
-                <div class="review-text">"La meilleure coiffeuse de Suisse"</div>
-                <div class="review-author">Janelle</div>
-                <div class="review-date">Avril 2026</div>
-            </div>
-            <div class="review-card">
-                <div class="review-stars">★★★★★</div>
-                <div class="review-text">"La meilleure ❤️"</div>
-                <div class="review-author">Vanessa</div>
-                <div class="review-date">Août 2026</div>
-            </div>
-            <div class="review-card">
-                <div class="review-stars">★★★★★</div>
-                <div class="review-text">"J'ai passé un super moment et le résultat est vraiment jolie, merci beaucoup ✨"</div>
-                <div class="review-author">Laura</div>
-                <div class="review-date">Mai 2026</div>
-            </div>
+        <div class="reviews-grid reveal stagger" id="reviewsGrid">
         </div>
     </section>
 
@@ -959,6 +1008,22 @@
                 <div class="hours-row"><span class="hours-day">Samedi</span><span class="hours-time" id="hrow6">08:00 — 14:00</span></div>
                 <div class="hours-row"><span class="hours-day">Dimanche</span><span class="hours-closed" id="hrow0">Fermé</span></div>
                 <p style="margin-top:1rem;font-size:0.8rem;color:var(--color-text-light);font-style:italic;">Sur rendez-vous uniquement</p>
+            </div>
+            <div class="contact-form-card reveal dir-up">
+                <h3>Écrivez-nous</h3>
+                <form id="contactForm" novalidate>
+                    <div class="field">
+                        <label for="contactName">Votre nom</label>
+                        <input type="text" id="contactName" maxlength="80" placeholder="Ex : Marie" required>
+                    </div>
+                    <div class="field">
+                        <label for="contactMessage">Votre message</label>
+                        <textarea id="contactMessage" rows="4" maxlength="600" placeholder="Ex : Bonjour, je souhaiterais des informations sur votre balayage…" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="justify-content:center;">Envoyer via WhatsApp</button>
+                    <p class="contact-form-msg" id="contactFormMsg"></p>
+                    <p class="form-note">Votre message s'ouvrira dans WhatsApp, prêt à être envoyé au salon.</p>
+                </form>
             </div>
             <div class="contact-card reveal dir-right">
                 <h3>Nous contacter</h3>
@@ -1004,6 +1069,16 @@
 
     <!-- Retour en haut -->
     <button class="to-top" id="toTop" title="Retour en haut" aria-label="Retour en haut">↑</button>
+
+    <!-- Lightbox galerie -->
+    <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Aperçu de la photo">
+        <button class="lightbox-close" id="lightboxClose" title="Fermer" aria-label="Fermer">✕</button>
+        <button class="lightbox-nav prev" id="lightboxPrev" title="Précédente" aria-label="Photo précédente">‹</button>
+        <img class="lightbox-img" id="lightboxImg" src="" alt="">
+        <button class="lightbox-nav next" id="lightboxNext" title="Suivante" aria-label="Photo suivante">›</button>
+        <div class="lightbox-caption" id="lightboxCaption"></div>
+        <div class="lightbox-counter" id="lightboxCounter"></div>
+    </div>
 
     <script>
 // ===== DATA =====
@@ -1260,10 +1335,12 @@
                 ${p.caption ? `<div class="gallery-caption">${escapeHtml(p.caption)}</div>` : ''}
             </div>`;
         }).join('');
+        lightboxItems = photos.map(p => ({ url: p.url, caption: p.caption || '' }));
 
         // Apparition en cascade
         const items = grid.querySelectorAll('.gallery-item');
         items.forEach((el, i) => {
+            el.addEventListener('click', () => openLightbox(i));
             setTimeout(() => el.classList.add('loaded'), 120 + i * 90);
         });
     }
@@ -1283,9 +1360,65 @@
                 <div class="gallery-caption">${escapeHtml(p.caption)}</div>
             </div>`;
         }).join('');
+        lightboxItems = demo.map(p => ({ url: p.url, caption: p.caption }));
         grid.querySelectorAll('.gallery-item').forEach((el, i) => {
+            el.addEventListener('click', () => openLightbox(i));
             setTimeout(() => el.classList.add('loaded'), 120 + i * 90);
         });
+    }
+
+    // ===== AVIS CLIENTS =====
+    const DEFAULT_REVIEWS = [
+        { rating: 5, text: 'La meilleure coiffeuse de Suisse', author: 'Janelle', date: 'Avril 2026' },
+        { rating: 5, text: 'La meilleure ❤️', author: 'Vanessa', date: 'Août 2026' },
+        { rating: 5, text: 'J\'ai passé un super moment et le résultat est vraiment jolie, merci beaucoup ✨', author: 'Laura', date: 'Mai 2026' },
+    ];
+
+    function reviewStars(n) { return '★'.repeat(Math.min(Math.max(n || 0, 0), 5)); }
+
+    function renderReviews(list) {
+        const grid = document.getElementById('reviewsGrid');
+        if (!grid) return;
+        if (!list || list.length === 0) list = DEFAULT_REVIEWS;
+        grid.innerHTML = list.map(r => `
+            <div class="review-card">
+                <div class="review-stars">${reviewStars(r.rating)}</div>
+                <div class="review-text">"${escapeHtml(r.text)}"</div>
+                <div class="review-author">${escapeHtml(r.author)}</div>
+                ${r.date ? `<div class="review-date">${escapeHtml(r.date)}</div>` : ''}
+            </div>`).join('');
+        const big = document.getElementById('reviewsBig');
+        const count = document.getElementById('reviewsCount');
+        if (big) big.textContent = '5.0';
+        if (count) count.textContent = (list.length > 1 ? list.length + ' avis' : '1 avis') + ' vérifié' + (list.length > 1 ? 's' : '');
+    }
+
+    function monthLabel(iso) {
+        if (!iso) return '';
+        try {
+            const d = new Date(iso);
+            return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        } catch (e) { return ''; }
+    }
+
+    async function loadReviews() {
+        const grid = document.getElementById('reviewsGrid');
+        if (!grid) return;
+        if (!db) { renderReviews(DEFAULT_REVIEWS); return; }
+        const { data, error } = await db
+            .from('reviews')
+            .select('id, author, rating, text, created_at')
+            .eq('active', true)
+            .order('sort_order', { ascending: true })
+            .order('created_at', { ascending: true });
+        if (error) { console.error('loadReviews error', error); renderReviews(DEFAULT_REVIEWS); return; }
+        const rows = (data || []).slice(0, 9).map(r => ({
+            author: r.author,
+            rating: r.rating,
+            text: r.text,
+            date: monthLabel(r.created_at),
+        }));
+        renderReviews(rows.length ? rows : DEFAULT_REVIEWS);
     }
 
     // Insère une nouvelle réservation dans Supabase
@@ -1317,6 +1450,71 @@
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
 
+    // ===== LIGHTBOX GALERIE =====
+    let lightboxItems = [];
+
+    function openLightbox(index) {
+        if (!lightboxItems.length) return;
+        showLightboxItem(index);
+        document.getElementById('lightbox').classList.add('open');
+        document.body.style.overflow = 'hidden';
+    }
+
+    let currentLightIndex = 0;
+
+    function showLightboxItem(i) {
+        currentLightIndex = (i + lightboxItems.length) % lightboxItems.length;
+        const it = lightboxItems[currentLightIndex];
+        const img = document.getElementById('lightboxImg');
+        img.src = it.url;
+        img.alt = it.caption || '';
+        document.getElementById('lightboxCaption').textContent = it.caption || '';
+        document.getElementById('lightboxCounter').textContent = `${currentLightIndex + 1} / ${lightboxItems.length}`;
+    }
+
+    function closeLightbox() {
+        document.getElementById('lightbox').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+
+    function setupLightbox() {
+        const lb = document.getElementById('lightbox');
+        if (!lb) return;
+        document.getElementById('lightboxClose').addEventListener('click', closeLightbox);
+        document.getElementById('lightboxPrev').addEventListener('click', () => showLightboxItem(currentLightIndex - 1));
+        document.getElementById('lightboxNext').addEventListener('click', () => showLightboxItem(currentLightIndex + 1));
+        lb.addEventListener('click', (e) => { if (e.target === lb) closeLightbox(); });
+        document.addEventListener('keydown', (e) => {
+            if (!lb.classList.contains('open')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') showLightboxItem(currentLightIndex - 1);
+            if (e.key === 'ArrowRight') showLightboxItem(currentLightIndex + 1);
+        });
+    }
+
+    // ===== FORMULAIRE CONTACT → WHATSAPP =====
+    function setupContactForm() {
+        const form = document.getElementById('contactForm');
+        if (!form) return;
+        const msg = document.getElementById('contactFormMsg');
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const name = (document.getElementById('contactName').value || '').trim();
+            const text = (document.getElementById('contactMessage').value || '').trim();
+            if (!name || !text) {
+                msg.textContent = 'Merci de remplir votre nom et votre message.';
+                msg.className = 'contact-form-msg err';
+                return;
+            }
+            const body = encodeURIComponent('Bonjour PreTalli Coiffure 👋\n\n' + text + '\n\n— ' + name);
+            const url = 'https://wa.me/' + WA_NUMBER + '?text=' + body;
+            window.open(url, '_blank');
+            msg.textContent = 'WhatsApp ouvert ✔ Prêt à envoyer !';
+            msg.className = 'contact-form-msg ok';
+            setTimeout(() => { msg.textContent = ''; msg.className = 'contact-form-msg'; }, 5000);
+        });
+    }
+
     // ===== STATE =====
     let bookingState = {
         service: null,
@@ -1341,6 +1539,9 @@
         loadSiteSettings();
         loadServices();
         loadGallery();
+        loadReviews();
+        setupLightbox();
+        setupContactForm();
         setupPromoClose();
     });
 

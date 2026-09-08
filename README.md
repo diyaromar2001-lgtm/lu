@@ -36,6 +36,19 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
   ils sont **masqués aux clients** du site public
 - **SEO local** : title, description, Open Graph, données structurées
   `HairSalon` (adresse, horaires, téléphone) pour mieux apparaître dans Google
+- **Avis des clientes** : témoignages gérés depuis l'admin (auteur, note sur 5,
+  texte, afficher/masquer, ordre), affichés sur la page d'accueil et mis à jour
+  automatiquement
+- **Galerie avec lightbox** : cliquer sur une photo de la galerie ouvre l'aperçu
+  en grand (navigation ← →, fermeture Échap)
+- **Formulaire de contact → WhatsApp** : les visiteurs envoient un message
+  prérempli au salon directement depuis la page Contact
+- **Export CSV** : téléchargez vos réservations (`⬇ CSV` dans Réservations) et
+  vos fiches clientes (`⬇ CSV` dans Clientes), importables dans Excel
+- **Rappels WhatsApp de demain** (onglet **Rappels** de l'admin) : liste des
+  rendez-vous confirmés du lendemain avec un bouton 💬 ouvrant un rappel
+  prérempli prêt à envoyer à chaque cliente
+- **Logo & favicon** : `logo.svg` et `favicon.svg` (monogramme doré PreTalli)
 
 ## Prérequis
 
@@ -97,6 +110,8 @@ pretalli-site/
 ├── admin.html
 ├── config.js
 ├── database.sql   (optionnel, pour référence)
+├── favicon.svg    (icône + petit logo)
+├── logo.svg       (grand logo)
 └── README.md      (optionnel, pour référence)
 ```
 
@@ -122,6 +137,18 @@ Onglet **Clientes** :
 - Noter la **formule** de chaque cliente (coloration, soin, couleurs…)
 - Ajouter une cliente manuellement
 
+Onglet **Avis** :
+- Gérer les témoignages affichés sur la page d'accueil (ajouter, modifier,
+  masquer/afficher, réordonner, supprimer)
+- Note de 1 à 5 étoiles, auteur et contenu ; la note moyenne et le nombre
+  d'avis sur la vitrine se mettent à jour tout seuls
+
+Onglet **Rappels** :
+- Chaque jour, ouvrez cet onglet : les rendez-vous **confirmés de demain**
+  y sont listés avec un bouton 💬
+- Cliquez sur 💬 pour ouvrir WhatsApp avec un rappel prérempli, prêt à envoyer
+  à la cliente (message : service, date, heure, adresse)
+
 > Sécurité : seul l'email inscrit dans la table `admins` peut voir et gérer
 > les rendez-vous. Les visiteurs du site ne voient que les créneaux occupés
 > (date + heure), jamais les données clients.
@@ -145,14 +172,18 @@ Puis ouvrez http://localhost:8080
 
 | Fichier          | Rôle                                              |
 |------------------|---------------------------------------------------|
-| `index.html`     | Site public (design, galerie, réservation)      |
-| `admin.html`     | Espace admin sécurisé (réservations, clientes, prestations, galerie, contenu, horaires) |
+| `index.html`     | Site public (design, galerie, avis, contact, réservation) |
+| `admin.html`     | Espace admin sécurisé (réservations, rappels, clientes, prestations, galerie, avis, contenu, horaires) |
+| `calendrier-semaine.html` | Vue semaine autonome (aperçu du planning, liens vers l'admin) |
 | `config.js`      | Clés Supabase + numéro WhatsApp                   |
 | `database.sql`   | Script SQL à exécuter dans Supabase (une fois)    |
+| `favicon.svg` / `logo.svg` | Icône d'onglet et logo du salon         |
 
 ## Personnalisation rapide
 
 - **WhatsApp** : modifiez `WA_NUMBER` dans `config.js` (format international sans `+`)
+- **Avis** : onglet **Avis** de l'admin (après avoir exécuté la section
+  « Avis clients » de `database.sql`)
 - **Contenu / couleurs / horaires / galerie / prestations / promo** :
   connectez-vous sur `admin.html` → onglets **Prestations**, **Galerie**,
   **Contenu**, **Horaires** (changement appliqué immédiatement sur le site public)
