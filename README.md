@@ -5,6 +5,10 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
 
 ## Fonctionnalités
 
+- **Design premium « Atelier de Luxe »** : typographie Cormorant Garamond +
+  DM Sans, palette or/crème/sombre, animations de scroll cinématiques (reveal,
+  parallaxe, stagger), effets glass morphism, texture de grain subtil,
+  micro-interactions au survol
 - Page d'accueil élégante (À propos, Prestations, Avis, Horaires, Contact)
 - Réservation en 4 étapes :
   1. Choix de la prestation
