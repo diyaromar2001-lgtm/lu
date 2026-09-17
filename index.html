@@ -2,7 +2,7 @@
 <html lang="fr" data-theme="classique">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>PreTalli Coiffure | Salon de coiffure à Courroux (Jura, Suisse)</title>
     <meta name="description" content="Salon de coiffure privé PreTalli Coiffure à Courroux (Jura, Suisse). Balayage, coloration, coupe et brushing sur rendez-vous. Réservez en ligne.">
     <meta name="keywords" content="coiffure Courroux, salon de coiffure Jura, balayage Courroux, coloration ballayage Suisse, PreTalli Coiffure">
@@ -155,7 +155,9 @@
             overflow-x: hidden;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            -webkit-tap-highlight-color: transparent;
         }
+        body.menu-open { overflow: hidden; }
 
         /* Noise texture — subtle grain for premium feel */
         body::after {
@@ -342,7 +344,8 @@
         @keyframes fadeUp { from { opacity: 0; transform: translateY(36px); } to { opacity: 1; transform: translateY(0); } }
 
         /* ===== SECTIONS — Premium layout ===== */
-        section { padding: 8rem 2rem; position: relative; }
+        section { padding: 8rem 2rem; position: relative; scroll-margin-top: 95px; }
+        body.has-promo section { scroll-margin-top: 138px; }
         .section-header { text-align: center; margin-bottom: 5rem; position: relative; }
         .section-header::before {
             content: ''; display: block; width: 70px; margin: 0 auto 1.6rem;
@@ -915,40 +918,195 @@
         .to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
         .to-top:hover { background: var(--color-accent-dark); color: white; transform: translateY(-3px); box-shadow: var(--shadow-md); }
 
+        /* ===== BARRE D'ACTIONS RAPIDES (mobile) ===== */
+        .mobile-actions {
+            position: fixed; bottom: 0; left: 0; right: 0; z-index: 996;
+            display: none;
+            background: rgba(var(--bg-rgb),0.92);
+            backdrop-filter: blur(20px) saturate(1.4);
+            -webkit-backdrop-filter: blur(20px) saturate(1.4);
+            border-top: 1px solid rgba(var(--dark-rgb),0.08);
+            box-shadow: 0 -10px 30px rgba(var(--dark-rgb),0.1);
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .mobile-actions a {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            gap: 3px; padding: 0.6rem 0.25rem 0.5rem;
+            text-decoration: none; color: var(--color-text-light);
+            font-size: 0.6rem; font-weight: 600; letter-spacing: 0.09em;
+            text-transform: uppercase; transition: color 0.3s;
+        }
+        .mobile-actions a:active { color: var(--color-accent-dark); }
+        .mobile-actions a svg { width: 22px; height: 22px; fill: currentColor; }
+        .mobile-actions .ma-primary { color: var(--color-accent-dark); }
+        .mobile-actions .ma-primary svg { width: 24px; height: 24px; }
+        .mobile-actions .ma-primary { background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark)); color: #fff; }
+        .mobile-actions .ma-primary svg { fill: #fff; }
+
         /* ===== RESPONSIVE — Mobile-first refinement ===== */
+        @media (max-width: 1024px) {
+            .hours-grid { grid-template-columns: 1fr; gap: 1.75rem; }
+        }
+
         @media (max-width: 768px) {
-            nav { padding: 1rem 1.5rem; }
-            nav.scrolled { padding: 0.8rem 1.5rem; }
+            /* --- Nav compacte --- */
+            nav { padding: 0.9rem 1.25rem; }
+            nav.scrolled { padding: 0.7rem 1.25rem; }
+            .nav-logo { font-size: 1.35rem; gap: 0.5rem; }
+            .nav-logo-icon { width: 26px; height: 26px; border-radius: 7px; }
+            .hamburger { display: flex; padding: 0.55rem 0.4rem; margin-right: -0.6rem; gap: 5px; }
+            .hamburger span { width: 24px; }
+
+            /* --- Menu plein écran --- */
             .nav-links {
                 display: flex; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-                background: rgba(var(--dark-rgb),0.97); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                background: rgba(var(--dark-rgb),0.95);
+                backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
                 flex-direction: column; align-items: center;
-                justify-content: center; gap: 2.4rem;
-                opacity: 0; visibility: hidden; transform: translateY(-20px);
-                transition: opacity 0.4s ease, transform 0.4s var(--ease-luxe), visibility 0.4s;
+                justify-content: center; gap: 1.9rem;
+                opacity: 0; visibility: hidden; transform: translateY(-16px);
+                transition: opacity 0.4s ease, transform 0.45s var(--ease-luxe), visibility 0.4s;
+                z-index: 2;
             }
             .nav-links.active { opacity: 1; visibility: visible; transform: translateY(0); }
-            .nav-links a { color: rgba(255,255,255,0.85) !important; font-size: 1.1rem; font-weight: 400; letter-spacing: 0.08em; }
-            .nav-links a:hover::after { width: 100%; }
-            .hamburger { display: flex; }
+            .nav-links a { color: rgba(255,255,255,0.85) !important; font-size: 1.02rem; font-weight: 400; letter-spacing: 0.08em; }
+            .nav-links a::after { display: none; }
+            .nav-links .nav-cta { padding: 0.9rem 2.6rem; font-size: 0.85rem !important; margin-top: 0.6rem; }
+            .nav-links .nav-cta::after { display: none !important; }
             .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
             .hamburger.active span:nth-child(2) { opacity: 0; }
             .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
-            .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
-            .about-image img { height: 360px; }
+            .hamburger.active span { background: #fff; }
+
+            /* --- Hero --- */
+            .hero { height: 100vh; height: 100dvh; min-height: 0; }
+            .hero::after {
+                background: linear-gradient(to bottom, rgba(var(--dark-rgb),0.22) 0%, transparent 24%, transparent 58%, rgba(var(--dark-rgb),0.6) 100%);
+            }
+            .hero-scroll { display: none; }
+            .hero h1 { font-size: clamp(2.7rem, 9.5vw, 3.7rem); margin-bottom: 1.3rem; }
+            .hero-badge { font-size: 1.6rem; margin-bottom: 1.3rem; }
+            .hero p { font-size: 1rem; margin-bottom: 2.1rem; }
+            .hero-buttons { width: 100%; max-width: 420px; gap: 0.9rem; }
+
+            /* --- Sections --- */
+            section { padding: 4.5rem 1.5rem; }
+            .section-header { margin-bottom: 3.2rem; }
+            .section-header .label { font-size: 0.62rem; }
+
+            .about-grid { grid-template-columns: 1fr; gap: 2.4rem; }
+            .about-image img { height: 340px; }
+            .about-image::after { left: 6px; top: 8px; }
             .about-image-accent { display: none; }
-            .about-features { flex-direction: column; gap: 1rem; }
-            .reviews-grid { grid-template-columns: 1fr; }
-            .hours-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 2.8rem; }
-            .booking-container { padding: 1.8rem; }
-            .timeslots-grid { grid-template-columns: repeat(3, 1fr); }
-            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .about-features { flex-direction: column; gap: 0.9rem; }
+            .about-text h3 { font-size: 1.9rem; }
+
+            .service-category { padding: 1.9rem 1.4rem; border-radius: 20px; }
+            .service-category-header { gap: 0.9rem; margin-bottom: 1.4rem; padding-bottom: 1.1rem; }
+            .service-category-icon { width: 46px; height: 46px; border-radius: 14px; font-size: 1.1rem; }
+            .service-item { gap: 1rem; padding: 1rem 0; }
+            .service-name { font-size: 0.92rem; }
+            .service-price { font-size: 1.08rem; }
+            .service-note { font-size: 0.76rem; }
+
+            .booking-container { padding: 1.7rem; border-radius: 24px; }
+            .booking-step-title { font-size: 1.35rem; }
+            .booking-services { gap: 0.7rem; }
+            .booking-service-btn { padding: 1.1rem 1.15rem; }
+            .booking-nav { margin-top: 1.8rem; }
+            .booking-nav .btn { flex: 1; justify-content: center; }
+
+            .reviews-rating { margin-bottom: 2.6rem; }
+            .reviews-rating .big-number { font-size: 3.8rem; }
+            .review-card { padding: 1.9rem 1.5rem; }
+            .reviews-grid { grid-template-columns: 1fr; gap: 1.1rem; }
+
+            .gallery { padding: 4.5rem 1.5rem; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); gap: 0.9rem; }
             .gallery-item.wide { grid-column: span 2; }
-            .whatsapp-float { bottom: 1.4rem; right: 1.4rem; width: 56px; height: 56px; }
-            .to-top { display: none; }
-            section { padding: 5rem 1.5rem; }
-            .section-header { margin-bottom: 3.5rem; }
+
+            .hours-card, .contact-card, .contact-form-card { padding: 1.9rem 1.5rem; border-radius: 22px; }
+            .hours-card:hover, .contact-card:hover, .contact-form-card:hover { transform: none; }
+
+            .cta { padding: 4.5rem 1.5rem; }
+
+            .map-section iframe { height: 320px; }
+
+            /* --- Barre d'actions rapides (mobile) --- */
+            .whatsapp-float { display: none; }
+            .mobile-actions { display: flex; }
+            .to-top { bottom: calc(5.4rem + env(safe-area-inset-bottom, 0px)); }
+            footer { padding-bottom: calc(4.6rem + env(safe-area-inset-bottom, 0px)); }
+        }
+
+        @media (max-width: 480px) {
+            section { padding: 3.75rem 1.25rem; }
+            .section-header { margin-bottom: 2.8rem; }
+            .section-header h2 { font-size: clamp(1.85rem, 8vw, 2.4rem); }
+
+            .hero h1 { font-size: 2.35rem; }
+            .hero-badge { font-size: 1.35rem; margin-bottom: 1.1rem; }
+            .hero p { font-size: 0.96rem; }
+            .hero-buttons { gap: 0.8rem; }
+            .hero-buttons .btn { width: 100%; justify-content: center; }
+
+            .about-image img { height: 280px; }
+            .about-text h3 { font-size: 1.7rem; }
+            .about-text p { font-size: 0.92rem; }
+
+            .services-grid { gap: 1.3rem; }
+            .service-category { padding: 1.6rem 1.2rem; }
+            .service-category-header h3 { font-size: 1.3rem; }
+            .service-price { font-size: 1rem; }
+            .service-name { font-size: 0.88rem; }
+
+            .booking-container { padding: 1.5rem 1.1rem; border-radius: 22px; }
+            .booking-step-title { font-size: 1.22rem; }
+            .booking-step-subtitle { font-size: 0.85rem; margin-bottom: 1.8rem; }
+            .booking-service-btn { padding: 1rem 0.95rem; border-radius: 16px; }
+            .booking-service-price { font-size: 1.02rem; }
+            .booking-service-info span { font-size: 0.75rem; }
+            .timeslots-grid { gap: 0.5rem; }
+            .timeslot-btn { padding: 0.72rem 0.15rem; font-size: 0.84rem; border-radius: 14px; }
+            .calendar-weekdays span { font-size: 0.6rem; }
+            .calendar-day { border-radius: 12px; font-size: 0.85rem; }
+            .booking-nav .btn { padding: 0.9rem 0.7rem; font-size: 0.76rem; border-radius: 40px; }
+            .form-group input, .form-group textarea, .form-group select { padding: 0.85rem 1rem; font-size: 0.92rem; border-radius: 14px; }
+            .confirmation-details { padding: 1.4rem 1.2rem; }
+            .confirmation-row { font-size: 0.82rem; }
+
+            .reviews-rating .big-number { font-size: 3.2rem; }
+            .review-card { padding: 1.6rem 1.3rem; border-radius: 20px; }
+            .review-text { font-size: 0.9rem; }
+
+            .gallery { padding: 4rem 1.25rem; }
+            .gallery-grid { gap: 0.8rem; }
+
+            .hours-card, .contact-card, .contact-form-card { padding: 1.6rem 1.2rem; border-radius: 20px; }
+            .hours-card h3, .contact-card h3, .contact-form-card h3 { font-size: 1.25rem; }
+            .contact-form-card .field input, .contact-form-card .field textarea { padding: 0.75rem 0.95rem; font-size: 0.9rem; }
+
+            .cta { padding: 3.75rem 1.25rem; }
+            .cta h2 { font-size: 1.8rem; }
+            .cta p { font-size: 0.95rem; }
+
+            footer { padding: 3rem 1.25rem calc(4.6rem + env(safe-area-inset-bottom, 0px)); }
+            .footer-links { gap: 1.3rem; }
+
+            .map-section iframe { height: 280px; }
+            .promo-bar { font-size: 0.76rem; padding: 0 2.6rem; }
+
+            .lightbox-img { max-width: 94vw; max-height: 76vh; }
+            .lightbox-caption { font-size: 0.85rem; max-width: 84%; }
+        }
+
+        @media (hover: none) and (pointer: coarse) {
+            .service-category:hover, .review-card:hover { transform: none; }
+            .gallery-item:hover img { transform: none; filter: none; }
+            .btn:hover::after { left: -140%; }
+            .btn-primary:hover, .btn-outline:hover, .btn-next:hover, .btn:hover { transform: none; }
+            .gallery-item:hover .gallery-caption { opacity: 1; transform: none; }
+            .gallery-item::after { display: none; }
         }
 
         /* ===== REDUCED MOTION — Accessibility ===== */
@@ -982,7 +1140,7 @@
             <li><a href="#contact">Contact</a></li>
             <li><a href="#booking" class="nav-cta">Réserver</a></li>
         </ul>
-        <div class="hamburger" id="hamburger">
+        <div class="hamburger" id="hamburger" role="button" tabindex="0" aria-label="Ouvrir le menu" aria-controls="navLinks" aria-expanded="false">
             <span></span><span></span><span></span>
         </div>
     </nav>
@@ -1269,6 +1427,22 @@
 
     <!-- Retour en haut -->
     <button class="to-top" id="toTop" title="Retour en haut" aria-label="Retour en haut">↑</button>
+
+    <!-- Barre d'actions rapides (mobile) -->
+    <div class="mobile-actions" id="mobileActions" aria-label="Actions rapides">
+        <a href="tel:+41796935978">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+            <span>Appeler</span>
+        </a>
+        <a href="#booking" class="ma-primary">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/></svg>
+            <span>Réserver</span>
+        </a>
+        <a href="https://wa.me/41796935978" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            <span>WhatsApp</span>
+        </a>
+    </div>
 
     <!-- Lightbox galerie -->
     <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="Aperçu de la photo">
@@ -1820,8 +1994,17 @@
 
         const hamburger = document.getElementById('hamburger');
         const navLinks = document.getElementById('navLinks');
-        hamburger.addEventListener('click', () => { hamburger.classList.toggle('active'); navLinks.classList.toggle('active'); });
-        navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => { hamburger.classList.remove('active'); navLinks.classList.remove('active'); }));
+
+        const setMenu = (open) => {
+            hamburger.classList.toggle('active', open);
+            navLinks.classList.toggle('active', open);
+            document.body.classList.toggle('menu-open', open);
+            hamburger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        hamburger.addEventListener('click', () => setMenu(!navLinks.classList.contains('active')));
+        navLinks.querySelectorAll('a').forEach(l => l.addEventListener('click', () => setMenu(false)));
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+        window.addEventListener('resize', () => { if (window.innerWidth > 768) setMenu(false); });
 
         // Apparition au défilement (reveal + stagger)
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
