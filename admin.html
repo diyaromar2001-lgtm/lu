@@ -491,6 +491,26 @@
         .cfg-field textarea { resize: vertical; min-height: 76px; }
         .cfg-field input:focus, .cfg-field textarea:focus { border-color: var(--color-accent); box-shadow: 0 0 0 4px rgba(201,168,124,0.14); }
         .cfg-full { grid-column: 1 / -1; }
+
+        /* Sélecteur de thème */
+        .theme-picker { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.9rem; }
+        .theme-opt {
+            position: relative; display: flex; flex-direction: column; gap: 0.7rem;
+            padding: 1rem 1.1rem; border: 2px solid rgba(0,0,0,0.08); border-radius: 16px;
+            cursor: pointer; background: var(--color-white); transition: all 0.25s;
+        }
+        .theme-opt input { position: absolute; opacity: 0; pointer-events: none; }
+        .theme-opt:hover { border-color: var(--color-accent); transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+        .theme-opt.selected { border-color: var(--color-accent); background: rgba(201,168,124,0.07); box-shadow: 0 0 0 3px rgba(201,168,124,0.12); }
+        .theme-opt-name { font-size: 0.88rem; font-weight: 600; color: var(--color-text); }
+        .theme-opt-dots { display: flex; gap: 0.45rem; align-items: center; }
+        .theme-opt-dots i { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.22); }
+        .theme-opt-check {
+            position: absolute; top: 0.7rem; right: 0.7rem; width: 22px; height: 22px;
+            border-radius: 50%; background: var(--color-accent); color: #fff;
+            font-size: 0.72rem; display: none; align-items: center; justify-content: center;
+        }
+        .theme-opt.selected .theme-opt-check { display: flex; }
         .hero-row { display: flex; gap: 1rem; align-items: flex-start; flex-wrap: wrap; margin-top: 0.5rem; }
         .hero-preview-box { width: 220px; height: 130px; border-radius: 14px; overflow: hidden;
             border: 2px dashed rgba(0,0,0,0.12); background: var(--color-cream);
@@ -915,6 +935,26 @@
                         <div class="cfg-field"><label>Couleur de fond</label><input type="color" id="promoColor"></div>
                         <div class="cfg-field"><label>Couleur du texte</label><input type="color" id="promoTextColor"></div>
                     </div>
+                </div>
+
+                <div class="cfg-card">
+                    <h3>Thème du site</h3>
+                    <div class="theme-picker" id="themePicker">
+                        <label class="theme-opt" data-theme="classique">
+                            <input type="radio" name="themeOpt" value="classique">
+                            <span class="theme-opt-check">✓</span>
+                            <span class="theme-opt-name">Classique doré</span>
+                            <span class="theme-opt-dots"><i style="background:#c9a87c"></i><i style="background:#b8935f"></i><i style="background:#faf8f5"></i><i style="background:#1a1512"></i></span>
+                        </label>
+                        <label class="theme-opt" data-theme="girly">
+                            <input type="radio" name="themeOpt" value="girly">
+                            <span class="theme-opt-check">✓</span>
+                            <span class="theme-opt-name">Girly Coiffeuse</span>
+                            <span class="theme-opt-dots"><i style="background:#e391ad"></i><i style="background:#ce6f90"></i><i style="background:#fbf3f6"></i><i style="background:#3b2133"></i></span>
+                        </label>
+                    </div>
+                    <input type="hidden" id="siteTheme" value="classique">
+                    <p class="gal-hint" style="margin-top:0.7rem;">Le thème définit les couleurs et la typographie du site. Les champs « Couleurs globales » ci-dessous restent prioritaires s'ils sont renseignés.</p>
                 </div>
 
                 <div class="cfg-card">
@@ -2452,10 +2492,26 @@
             }
         }
 
+        function renderThemePicker() {
+            const picker = document.getElementById('themePicker');
+            if (!picker) return;
+            const value = (document.getElementById('siteTheme') || {}).value || 'classique';
+            picker.querySelectorAll('.theme-opt').forEach(o => {
+                const active = o.dataset.theme === value;
+                o.classList.toggle('selected', active);
+                const radio = o.querySelector('input');
+                if (radio) radio.checked = active;
+            });
+        }
+
         function fillContentForm() {
             const c = currentSettings.colors || {};
             const t = currentSettings.texts || {};
             const set2 = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ''; };
+            // Thème du site
+            const st = document.getElementById('siteTheme');
+            if (st) st.value = currentSettings.theme || 'classique';
+            renderThemePicker();
             // Couleurs : si défini on préremplit, sinon on laisse blanc (inchangé)
             ['accent', 'accentDark', 'bg', 'dark'].forEach(k => {
                 const map = { accent: 'col_accent', accentDark: 'col_accentDark', bg: 'col_bg', dark: 'col_dark' };
@@ -2578,6 +2634,7 @@
             };
 
             const payload = {
+                theme: (document.getElementById('siteTheme') || {}).value || 'classique',
                 colors,
                 texts,
                 hours: currentSettings.hours || {},
@@ -2662,6 +2719,14 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            const picker = document.getElementById('themePicker');
+            if (picker) picker.addEventListener('change', (e) => {
+                if (e.target && e.target.name === 'themeOpt') {
+                    document.getElementById('siteTheme').value = e.target.value;
+                    renderThemePicker();
+                    showToast('Thème « ' + (e.target.value === 'girly' ? 'Girly Coiffeuse' : 'Classique doré') + ' » sélectionné — cliquez sur « Enregistrer le contenu »');
+                }
+            });
             const input = document.getElementById('photoInput');
             if (input) input.addEventListener('change', (e) => uploadPhotos(e.target.files));
             const hero = document.getElementById('heroInput');

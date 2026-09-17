@@ -207,6 +207,7 @@ create policy "photos auth delete" on storage.objects
 -- ------------------------------------------------------------
 insert into public.settings (key, value) values
 ('site_content', '{
+  "theme": "classique",
   "hero_image": "",
   "logo_url": "",
   "google_review_url": "",

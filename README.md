@@ -29,6 +29,7 @@ Site vitrine autonome pour PreTalli Coiffure (Courroux, Jura) avec un
 - **Galerie animée** sur la page d'accueil, pilotable depuis l'admin :
   - Ajout / suppression de photos, légendes, ordre
 - **Contenu du site éditable** depuis l'admin (sans toucher au code) :
+  - **Thème du site** : « Classique doré » ou « Girly Coiffeuse » (couleurs + typographie), choisi depuis l'admin
   - Couleurs globales et par section, textes des titres/paragraphes,
     image de couverture (hero)
 - **Horaires puisant dans une base de données** : réglables depuis l'admin,
@@ -202,9 +203,11 @@ Puis ouvrez http://localhost:8080
   lien de votre fiche Google Maps (Partage → Copier le lien sur l'appli Google Maps)
 - **Avis** : onglet **Avis** de l'admin (après avoir exécuté la section
   « Avis clients » de `database.sql`)
-- **Contenu / couleurs / horaires / galerie / prestations / promo** :
+- **Contenu / thèmes / couleurs / horaires / galerie / prestations / promo** :
   connectez-vous sur `admin.html` → onglets **Prestations**, **Galerie**,
   **Contenu**, **Horaires** (changement appliqué immédiatement sur le site public)
+- **Changer le thème du site** : `admin.html` → onglet **Contenu** → « Thème du
+  site » → **Classique doré** ou **Girly Coiffeuse** → « Enregistrer le contenu »
 - **Horaires d'ouverture** : onglet **Horaires** de l'admin (ou défaut dans
   `OPEN_HOURS` dans `index.html`)
 - **Prestations / prix** : modifiez l'objet `SERVICES` dans `index.html`
