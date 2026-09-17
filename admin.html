@@ -2633,8 +2633,12 @@
                 text_color: document.getElementById('promoTextColor').value
             };
 
+            // Thème : la radio cochée fait foi (plus fiable que le champ caché)
+            const checkedTheme = document.querySelector('input[name="themeOpt"]:checked');
+            const theme = checkedTheme ? checkedTheme.value : ((document.getElementById('siteTheme') || {}).value || 'classique');
+
             const payload = {
-                theme: (document.getElementById('siteTheme') || {}).value || 'classique',
+                theme,
                 colors,
                 texts,
                 hours: currentSettings.hours || {},

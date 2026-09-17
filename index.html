@@ -1421,17 +1421,21 @@
         }
 
         // --- Couleurs globales (variables CSS) ---
-        // Les couleurs personnalisées écrasent le thème ; on synchronise aussi les
-        // composantes RGB pour que les ombres / dégradés restent cohérents.
+        // Un thème préréglé (ex. girly) définit sa propre palette : il prime sur
+        // les couleurs personnalisées. Celles-ci ne s'appliquent qu'avec le thème
+        // classique (ou si aucun thème n'est choisi).
+        const presetTheme = cfg.theme && cfg.theme !== 'classique';
         function hexToRgb(hex) {
             const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(String(hex).trim());
             return m ? [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)].join(', ') : null;
         }
-        const c = cfg.colors || {};
-        if (c.accent) { root.setProperty('--color-accent', c.accent); const r = hexToRgb(c.accent); if (r) root.setProperty('--accent-rgb', r); }
-        if (c.accent_dark) { root.setProperty('--color-accent-dark', c.accent_dark); const r = hexToRgb(c.accent_dark); if (r) root.setProperty('--accent-dark-rgb', r); }
-        if (c.bg) { root.setProperty('--color-bg', c.bg); const r = hexToRgb(c.bg); if (r) root.setProperty('--bg-rgb', r); }
-        if (c.dark) { root.setProperty('--color-dark', c.dark); const r = hexToRgb(c.dark); if (r) root.setProperty('--dark-rgb', r); }
+        if (!presetTheme) {
+            const c = cfg.colors || {};
+            if (c.accent) { root.setProperty('--color-accent', c.accent); const r = hexToRgb(c.accent); if (r) root.setProperty('--accent-rgb', r); }
+            if (c.accent_dark) { root.setProperty('--color-accent-dark', c.accent_dark); const r = hexToRgb(c.accent_dark); if (r) root.setProperty('--accent-dark-rgb', r); }
+            if (c.bg) { root.setProperty('--color-bg', c.bg); const r = hexToRgb(c.bg); if (r) root.setProperty('--bg-rgb', r); }
+            if (c.dark) { root.setProperty('--color-dark', c.dark); const r = hexToRgb(c.dark); if (r) root.setProperty('--dark-rgb', r); }
+        }
 
         // Couleur de la barre d'onglet (mobile)
         const themeMeta = document.querySelector('meta[name="theme-color"]');
@@ -1440,17 +1444,19 @@
             themeMeta.content = dark || '#1a1512';
         }
 
-        // --- Couleurs de fond par section ---
+        // --- Couleurs de fond par section (thème classique uniquement) ---
         const sectionMap = {
             about: 'about', services: 'services', gallery: 'gallery',
             booking: 'booking', reviews: 'reviews', contact: 'contact',
             cta: 'cta', footer: 'footer'
         };
-        for (const key in sectionMap) {
-            const color = c[key];
-            if (!color) continue;
-            const el = document.getElementById(sectionMap[key]);
-            if (el) el.style.background = color;
+        if (!presetTheme) {
+            for (const key in sectionMap) {
+                const color = (cfg.colors || {})[key];
+                if (!color) continue;
+                const el = document.getElementById(sectionMap[key]);
+                if (el) el.style.background = color;
+            }
         }
 
         // --- Textes (non modifiés => texte actuel conservé) ---
